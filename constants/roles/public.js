@@ -1,0 +1,33 @@
+export default {
+  getters: {
+    ITEMS: 'roles/items',
+    SELECTED: 'roles/selected',
+    SELECTED_IDS: 'roles/selectedIds',
+    LOADING: 'roles/isLoading',
+    HAS_MORE: 'roles/hasMore',
+    QUERY_PARAMS: 'roles/queryParams',
+  },
+  mutations: {
+    SET_ITEMS: 'roles/setItems',
+    SET_SELECTED: 'roles/setSelected',
+    SET_PARAM: 'roles/setParam',
+    SET_LOADING: 'roles/setLoading',
+    SET_HAS_MORE: 'roles/setHasMore',
+    ADD_ITEM: 'roles/addItem',
+    UPDATE_ITEM: 'roles/updateItem',
+    REMOVE_ITEMS: 'roles/removeItems',
+    EXCLUDE_FROM_FETCH: 'roles/exclude',
+    REMOVE_FROM_EXCLUDE: 'roles/removeFromExclude',
+    CLEAR_ITEMS: 'roles/clearRoles',
+  },
+  actions: {
+    FETCH: 'roles/fetchRoles',
+    RESET_CURSORS: 'roles/resetCursors',
+    ADD_ITEM: 'roles/addRole',
+    EDIT_ROLE: 'roles/editRole',
+    UPDATE_ITEM: 'roles/updateRole',
+    REMOVE_ITEMS: 'roles/removeItems',
+    CHANGE_ROLE_DETAIL: 'roles/changeRoleDetail',
+    CLEAR_ITEMS: 'roles/clearItems',
+  },
+};
