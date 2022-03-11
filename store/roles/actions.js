@@ -1,9 +1,5 @@
 import ROLES from '~/constants/roles/private.js';
-import pick from 'lodash/pick';
-import fetchItems from '~/utilities/store/actions/fetchItems.js';
-import removeItems from '~/utilities/store/actions/removeItems.js';
-import clearItems from '~/utilities/store/actions/clearItems.js';
-import resetCursor from '~/utilities/resetCursor.js';
+
 import { defaultQueryParams } from './state.js';
 import { mapActionsToStore } from '~/utilities/store';
 

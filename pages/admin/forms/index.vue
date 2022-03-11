@@ -53,11 +53,11 @@
           <template #item.created_by="{ item }" v-if="canUpdateAll">
             <v-list-item class="px-0">
               <v-list-item-avatar>
-                <user-avatar :item="item" :size="40" />
+                <user-avatar :item="item.created_by" :size="40" />
               </v-list-item-avatar>
               <v-list-item-content>
                 <v-list-item-title>
-                  {{ item.username }}
+                  {{ item.created_by.username }}
                 </v-list-item-title>
               </v-list-item-content>
             </v-list-item>

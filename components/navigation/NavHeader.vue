@@ -28,11 +28,11 @@
               :link="link"
               :class="{ 'ml-4': idx === 0 }"
             ></nav-header-item>
-            <recruit-dialog
+            <roster-applicant-dialog
               v-model="showForm"
               v-if="canViewForms"
               :button="true"
-            ></recruit-dialog>
+            ></roster-applicant-dialog>
             <v-spacer></v-spacer>
             <auth-dialog
               v-model="showAuth"
@@ -90,7 +90,7 @@ import NavMobile from './NavMobile.vue';
 import NavHeaderItem from './NavHeaderItem.vue';
 import DiscordButton from '~/components/dialogs/DiscordButton.vue';
 
-import RecruitDialog from '~/components/recruitment/RecruitDialog.vue';
+import RosterApplicantDialog from '~/components/rosters/RosterApplicantDialog.vue';
 import AuthDialog from '~/components/auth/AuthDialog.vue';
 
 import menu from '~/constants/menu/public.js';
@@ -100,7 +100,7 @@ export default {
   name: 'NavHeader',
   components: {
     AuthDialog,
-    RecruitDialog,
+    RosterApplicantDialog,
     NavMobile,
     NavHeaderItem,
     NavUserMenu,

@@ -18,35 +18,37 @@ const hasScope = function (auth) {
       }
     }
 
-    let _options = Object.assign({}, defaultOptions, options);
+    if (auth.loggedIn) {
+      let _options = Object.assign({}, defaultOptions, options);
 
-    let user = get(auth, _options.userObject, undefined);
+      let user = get(auth, _options.userObject, undefined);
 
-    if (!user) {
-      throw new Error(`userObject: ${_options.userObject} is invalid.`);
-    }
+      if (!user) {
+        throw new Error(`userObject: ${_options.userObject} is invalid.`);
+      }
 
-    let permissions = get(user, _options.permissionsProp, undefined);
+      let permissions = get(user, _options.permissionsProp, undefined);
 
-    if (!permissions) {
-      throw new Error(
-        `permissionProp: ${_options.permissionsProp} is invalid.`
+      if (!permissions) {
+        throw new Error(
+          `permissionProp: ${_options.permissionsProp} is invalid.`
+        );
+      }
+
+      if (isString(permissions)) {
+        permissions = permissions.split(' ');
+      }
+
+      if (!isArray(permissions)) {
+        throw new Error('User permissions should be an array.');
+      }
+
+      const sufficient = required.some((req) =>
+        req.every((perm) => permissions.includes(perm))
       );
+
+      return sufficient;
     }
-
-    if (isString(permissions)) {
-      permissions = permissions.split(' ');
-    }
-
-    if (!isArray(permissions)) {
-      throw new Error('User permissions should be an array.');
-    }
-
-    const sufficient = required.some((req) =>
-      req.every((perm) => permissions.includes(perm))
-    );
-
-    return sufficient;
   };
 };
 

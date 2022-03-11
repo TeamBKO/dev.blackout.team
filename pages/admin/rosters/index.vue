@@ -67,25 +67,13 @@
                 </v-list-item-content>
               </v-list-item>
             </template>
-            <template #item.form="{ item }" v-if="canUpdateAll">
-              <span @focus="getForms" v-if="showField === false">{{
-                item.form.name
-              }}</span>
-              <table-field
-                v-else
-                :items="forms"
-                :value="item.form.id"
-                :itemText="'name'"
-                @save="updateRoster(item.id, 'roster_form', $event)"
-              >
-                <template #select="{ items, value }">
-                  <v-autocomplete :value="value" :items="items">
-                    <template #append-item>
-                      <div v-intersect="endInteract"></div>
-                    </template>
-                  </v-autocomplete>
-                </template>
-              </table-field>
+            <template #item.roster_form="{ item }" v-if="canUpdateAll">
+              <roster-table-field
+                v-if="item"
+                :value="item.roster_form.id"
+                :item="item.roster_form"
+                @save="updateRoster(item.id, 'selectedForm', $event)"
+              ></roster-table-field>
             </template>
             <template #item.enable_recruitment="{ item }" v-if="canUpdateAll">
               <v-switch
@@ -115,7 +103,7 @@
             </template>
             <template #item.actions="{ item }">
               <table-actions
-                @view="$router.push(`/admin/rosters/${item.id}`)"
+                @view="$router.push(`/roster/${item.id}`)"
                 @edit="$refs.rosterDialog.setEditableContent(item.id)"
                 @remove="setItemForRemoval(item.id)"
                 :actions="actions"
@@ -125,11 +113,11 @@
           </v-data-table>
           <div
             class="d-flex justify-center align-center"
-            v-intersect="onIntersect"
+            v-intersect.quiet="onIntersect"
             v-if="rosters.length && hasMore"
           >
             <v-progress-circular
-              intermediate
+              indeterminate
               v-if="loading"
             ></v-progress-circular>
           </div>
@@ -154,10 +142,12 @@ import ROSTERS from '~/constants/rosters/public.js';
 import FORMS from '~/constants/forms/public.js';
 
 import UserAvatar from '~/components/avatar/ListAvatar.vue';
-import TableField from '~/components/controls/TableField.vue';
+
 import TableActions from '~/components/controls/Actions.vue';
 import DeleteDialog from '~/components/dialogs/DeleteDialog.vue';
 import RosterDialog from '~/components/rosters/RosterDialog.vue';
+import RosterTableField from '~/components/rosters/RosterTableField.vue';
+import TableField from '~/components/controls/TableField.vue';
 
 export default {
   name: 'RostersTable',
@@ -183,6 +173,7 @@ export default {
 
   components: {
     TableField,
+    RosterTableField,
     TableActions,
     DeleteDialog,
     RosterDialog,
@@ -239,22 +230,12 @@ export default {
       const payload = { [name]: value };
       this.$store.dispatch(ROSTERS.actions.UPDATE_ITEM, { id, payload });
     },
-    getForms() {
-      this.showFormField = true;
-    },
 
-    async endIntersect(entries, observer, isIntersecting) {
+    async onIntersect(entries, observer, isIntersecting) {
       if (this.hasMore && this.rosters.length) {
         if (isIntersecting) {
-          console.log('intersecting');
           this.$store.dispatch(ROSTERS.actions.FETCH, { loading: true });
         }
-      }
-    },
-
-    endIntersectForms(entries, observer, isIntersecting) {
-      if (isIntersecting && this.forms.length) {
-        this.$store.dispatch(FORMS.actions.FETCH, { loading: true });
       }
     },
   },
@@ -280,12 +261,14 @@ export default {
       ]);
     },
 
-    forms() {
-      return this.$store.getters[FORMS.getters.ITEMS];
-    },
-
     rosters() {
-      return this.$store.getters[ROSTERS.getters.ITEMS];
+      return this.$store.getters[ROSTERS.getters.ITEMS].map((roster) => {
+        let { roster_form, ...r } = roster;
+        if (!roster_form) {
+          roster_form = 0;
+        }
+        return { ...r, roster_form };
+      });
     },
 
     hasMore() {
@@ -307,7 +290,7 @@ export default {
         {
           text: 'FORM',
           sortable: false,
-          value: this.showFormField ? 'roster_form.id' : 'roster_form.name',
+          value: 'roster_form',
         },
         {
           text: 'CREATOR',

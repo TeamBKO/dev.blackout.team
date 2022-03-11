@@ -1,25 +1,33 @@
 import snakeCase from 'lodash/snakeCase';
 import cloneDeep from 'lodash/cloneDeep';
+import pick from 'lodash/pick';
 
-export const mapStateToStore = function mapStateToStore(queryParams) {
-  return {
+export const mapStateToStore = function mapStateToStore(queryParams, picked) {
+  const state = {
     items: [],
     selected: [],
     hasMore: true,
     loading: false,
     queryParams: cloneDeep(queryParams),
   };
+
+  if (Array.isArray(picked) && picked.length) {
+    return pick(state, picked);
+  }
+
+  return state;
 };
 
-export const mapGettersToStore = function mapGettersToStore(obj) {
+export const mapGettersToStore = function mapGettersToStore(namespace) {
   return {
-    [obj.getters.ITEMS]: (state) => state.items,
-    [obj.getters.SELECTED]: (state) => state.selected,
-    [obj.getters.SELECTED_IDS]: (state) => state.selected.map(({ id }) => id),
-    [obj.getters.QUERY_PARAMS]: (state) => (key) =>
+    [namespace.getters.ITEMS]: (state) => state.items,
+    [namespace.getters.SELECTED]: (state) => state.selected,
+    [namespace.getters.SELECTED_IDS]: (state) =>
+      state.selected.map(({ id }) => id),
+    [namespace.getters.QUERY_PARAMS]: (state) => (key) =>
       typeof key !== undefined ? state.queryParams[key] : state.queryParams,
-    [obj.getters.HAS_MORE]: (state) => state.hasMore,
-    [obj.getters.LOADING]: (state) => state.loading,
+    [namespace.getters.HAS_MORE]: (state) => state.hasMore,
+    [namespace.getters.LOADING]: (state) => state.loading,
   };
 };
 

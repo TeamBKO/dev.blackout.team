@@ -12,11 +12,10 @@ const state = () => ({
     categories: [],
     tags: [],
   },
-
   type: '',
-
   selected: [],
-
+  hasMore: true,
+  loading: false,
   queryParams: defaultQueryParams,
 });
 

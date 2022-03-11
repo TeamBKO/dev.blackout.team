@@ -5,16 +5,9 @@
 <script>
 import RosterContainer from '~/components/rosters/RosterContainer.vue';
 export default {
-  name: 'Roster',
+  name: 'RosterPage',
 
-  beforeRouteEnter(to, from, next) {
-    next((vm) => {
-      if (from) {
-        vm.from = from.fulPath;
-        console.log(from);
-      }
-    });
-  },
+  components: { RosterContainer },
 
   data() {
     return {

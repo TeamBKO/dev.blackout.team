@@ -1,14 +1,17 @@
 <template>
   <v-dialog v-model="open" :max-width="800">
+    <template #activator="{ on }">
+      <slot name="activator" v-bind="on" />
+    </template>
     <v-card :max-width="800">
       <v-toolbar dark>
-        <v-toolbar-title>Create A Roster</v-toolbar-title>
+        <v-toolbar-title>{{ title }}</v-toolbar-title>
         <v-spacer></v-spacer>
         <v-btn icon @click="open = false">
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </v-toolbar>
-      <v-tabs v-model="tab" @change="onChange">
+      <v-tabs v-model="tab">
         <v-tab>Details</v-tab>
         <v-tab :disabled="!editable.apply_roles_on_approval">Roles</v-tab>
       </v-tabs>
@@ -46,102 +49,107 @@
                     </v-list-item>
                   </v-col>
                   <v-col cols="12" class="py-0">
-                    <v-list>
-                      <v-list-item class="px-0">
-                        <v-list-item-content>
-                          <v-list-item-subtitle>
-                            <span>Enable Recruitment</span>
-                            <v-tooltip bottom>
-                              <template #activator="{ on, attrs }">
-                                <v-icon right v-on="on" v-bind="attrs"
-                                  >mdi-information-outline</v-icon
-                                >
-                              </template>
-                              <span
-                                >Allows guests and members to apply to the
-                                roster.</span
+                    <v-list-item class="px-0">
+                      <v-list-item-content>
+                        <v-list-item-subtitle>
+                          <span>Enable Recruitment</span>
+                          <v-tooltip bottom>
+                            <template #activator="{ on, attrs }">
+                              <v-icon right v-on="on" v-bind="attrs"
+                                >mdi-information-outline</v-icon
                               >
-                            </v-tooltip>
-                          </v-list-item-subtitle>
-                        </v-list-item-content>
-                        <v-list-item-action>
-                          <v-switch
-                            v-model="editable.enable_recruitment"
-                          ></v-switch>
-                        </v-list-item-action>
-                      </v-list-item>
-                      <v-list-item class="px-0">
-                        <v-list-item-content>
-                          <v-list-item-subtitle>
-                            <span>Apply roles on approval</span>
-                            <v-tooltip bottom>
-                              <template #activator="{ on, attrs }">
-                                <v-icon right v-on="on" v-bind="attrs"
-                                  >mdi-information-outline</v-icon
-                                >
-                              </template>
-                              <span
-                                >Apply site roles to applicants that are
-                                approved</span
+                            </template>
+                            <span
+                              >Allows guests and members to apply to the
+                              roster.</span
+                            >
+                          </v-tooltip>
+                        </v-list-item-subtitle>
+                      </v-list-item-content>
+                      <v-list-item-action>
+                        <v-switch
+                          v-model="editable.enable_recruitment"
+                        ></v-switch>
+                      </v-list-item-action>
+                    </v-list-item>
+                  </v-col>
+                  <v-col cols="12" v-if="hasApplyOnRoles">
+                    <v-list-item class="px-0">
+                      <v-list-item-content>
+                        <v-list-item-subtitle>
+                          <span>Apply roles on approval</span>
+                          <v-tooltip bottom>
+                            <template #activator="{ on, attrs }">
+                              <v-icon right v-on="on" v-bind="attrs"
+                                >mdi-information-outline</v-icon
                               >
-                            </v-tooltip>
-                          </v-list-item-subtitle>
-                        </v-list-item-content>
-                        <v-list-item-action>
-                          <v-switch
-                            v-model="editable.apply_roles_on_approval"
-                          ></v-switch>
-                        </v-list-item-action>
-                      </v-list-item>
-                      <v-list-item class="px-0">
-                        <v-list-item-content>
-                          <v-list-item-subtitle>
-                            <span>Private</span>
-                            <v-tooltip bottom>
-                              <template #activator="{ on, attrs }">
-                                <v-icon right v-on="on" v-bind="attrs"
-                                  >mdi-information-outline</v-icon
-                                >
-                              </template>
-                              <span
-                                >Makes the roster private. Only applicants
-                                approved to member and above will be able to see
-                                it.</span
+                            </template>
+                            <span
+                              >Apply site roles to applicants that are
+                              approved</span
+                            >
+                          </v-tooltip>
+                        </v-list-item-subtitle>
+                      </v-list-item-content>
+                      <v-list-item-action>
+                        <v-switch
+                          v-model="editable.apply_roles_on_approval"
+                        ></v-switch>
+                      </v-list-item-action>
+                    </v-list-item>
+                  </v-col>
+                  <v-col cols="12">
+                    <v-list-item class="px-0">
+                      <v-list-item-content>
+                        <v-list-item-subtitle>
+                          <span>Private</span>
+                          <v-tooltip bottom>
+                            <template #activator="{ on, attrs }">
+                              <v-icon right v-on="on" v-bind="attrs"
+                                >mdi-information-outline</v-icon
                               >
-                            </v-tooltip>
-                          </v-list-item-subtitle>
-                        </v-list-item-content>
-                        <v-list-item-action>
-                          <v-switch v-model="editable.private"></v-switch>
-                        </v-list-item-action>
-                      </v-list-item>
-                      <v-list-item class="px-0">
-                        <v-list-item-content>
-                          <v-list-item-subtitle>
-                            <span>Disable</span>
-                            <v-tooltip bottom>
-                              <template #activator="{ on, attrs }">
-                                <v-icon right v-on="on" v-bind="attrs"
-                                  >mdi-information-outline</v-icon
-                                >
-                              </template>
-                              <span
-                                >The roster is disabled and inaccessible to
-                                everyone besides those with admin control panel
-                                access.</span
+                            </template>
+                            <span
+                              >Makes the roster private. Only applicants
+                              approved to member and above will be able to see
+                              it.</span
+                            >
+                          </v-tooltip>
+                        </v-list-item-subtitle>
+                      </v-list-item-content>
+                      <v-list-item-action>
+                        <v-switch v-model="editable.private"></v-switch>
+                      </v-list-item-action>
+                    </v-list-item>
+                  </v-col>
+                  <v-col cols="12">
+                    <v-list-item class="px-0">
+                      <v-list-item-content>
+                        <v-list-item-subtitle>
+                          <span>Disable</span>
+                          <v-tooltip bottom>
+                            <template #activator="{ on, attrs }">
+                              <v-icon right v-on="on" v-bind="attrs"
+                                >mdi-information-outline</v-icon
                               >
-                            </v-tooltip>
-                          </v-list-item-subtitle>
-                        </v-list-item-content>
-                        <v-list-item-action>
-                          <v-switch v-model="editable.is_disabled"></v-switch>
-                        </v-list-item-action>
-                      </v-list-item>
-                    </v-list>
+                            </template>
+                            <span
+                              >The roster is disabled and inaccessible to
+                              everyone besides those with admin control panel
+                              access.</span
+                            >
+                          </v-tooltip>
+                        </v-list-item-subtitle>
+                      </v-list-item-content>
+                      <v-list-item-action>
+                        <v-switch v-model="editable.is_disabled"></v-switch>
+                      </v-list-item-action>
+                    </v-list-item>
                   </v-col>
                   <v-col cols="12">
                     <roster-form-select
                       v-model="editable.selectedForm"
+                      :items.sync="internalForms"
                     ></roster-form-select>
                   </v-col>
                 </v-row>
@@ -150,6 +158,7 @@
           </v-tab-item>
           <v-tab-item>
             <roster-roles
+              v-if="hasApplyOnRoles"
               v-model="editable.selectedRoles"
               :tabIsActive="isRolesTab"
             ></roster-roles>
@@ -170,6 +179,7 @@
 <script>
 import debounce from 'lodash/debounce';
 import cloneDeep from 'lodash/cloneDeep';
+import uniqBy from 'lodash/uniqBy';
 import FORMS from '~/constants/forms/public.js';
 import ROSTERS from '~/constants/rosters/public.js';
 import {
@@ -203,10 +213,14 @@ export default {
       type: Boolean,
       default: false,
     },
+    title: {
+      type: String,
+      default: 'Create A Roster',
+    },
   },
 
   watch: {
-    open(v) {
+    async open(v) {
       if (!v) {
         if (this.id) {
           this.id = null;
@@ -215,9 +229,12 @@ export default {
         this.clearData();
       } else {
         if (!this.forms.length) {
-          this.$store.dispatch(FORMS.actions.FETCH, {
+          const { results } = await this.$store.dispatch(FORMS.actions.FETCH, {
             url: '/forms',
           });
+          this.internalForms = results;
+        } else {
+          this.internalForms = [...this.forms];
         }
       }
     },
@@ -235,6 +252,8 @@ export default {
         selectedForm: 0,
         selectedRoles: [],
       },
+
+      internalForms: [],
 
       mode: 'create',
       id: null,
@@ -267,14 +286,46 @@ export default {
     },
 
     async create() {
-      const data = Object.assign({}, this.editable);
+      const data = {};
+
+      if (this.editable.name) {
+        Object.assign(data, { name: this.editable.name });
+      }
+
+      if (this.editable.icon) {
+        Object.assign(data, { icon: this.editable.icon });
+      }
+
+      if (this.editable.enable_recruitment) {
+        Object.assign(data, {
+          enable_recruitment: this.editable.enable_recruitment,
+        });
+      }
+
+      if (this.editable.apply_roles_on_approval) {
+        Object.assign(data, {
+          apply_roles_on_approval: this.editable.apply_roles_on_approval,
+        });
+      }
+
+      if (this.editable.private) {
+        Object.assign(data, {
+          private: this.editable.private,
+        });
+      }
+
+      if (this.editable.is_disabled) {
+        Object.assign(data, {
+          is_disabled: this.editable.is_disabled,
+        });
+      }
 
       if (this.editable.selectedForm) {
-        Object.assign(data, { form: this.editable.selectedForm });
+        Object.assign(data, { selectedForm: this.editable.selectedForm });
       }
 
       if (this.editable.selectedRoles && this.editable.selectedRoles.length) {
-        Object.assign(data, { roles: this.editable.selectedRoles });
+        Object.assign(data, { selectedRoles: this.editable.selectedRoles });
       }
 
       this.isSending = true;
@@ -312,6 +363,7 @@ export default {
         if (item) {
           this.defaultProperties = this.setData(this.defaultProperties, item);
         }
+        this.$emit('onUpdate', item);
       } catch (err) {
         this.editable = this.setData(this.editable, this.defaultProperties);
         console.log(err);
@@ -327,7 +379,7 @@ export default {
       }, {});
     },
 
-    async setEditableContent(id, readOnly = false) {
+    async setEditableContent(id, content, fetch = true, readOnly = false) {
       this.mode = 'edit';
       this.open = true;
       this.isSending = true;
@@ -337,7 +389,13 @@ export default {
       }
 
       try {
-        const item = (await this.$axios.get(`/admin/rosters/${id}`)).data;
+        let item;
+
+        if (fetch) {
+          item = await this.$axios.$get(`/admin/rosters/${id}`);
+        } else {
+          item = content;
+        }
 
         if (item) {
           const cloned = cloneDeep(item);
@@ -347,25 +405,23 @@ export default {
             this.setData(this.editable, item)
           );
 
+          console.log('item', item);
+
           this.defaultProperties = Object.assign(
             this.defaultProperties,
             this.setData(this.defaultProperties, cloned)
           );
 
-          if (item.icon) {
-            this.editable.icon = item.icon;
-            this.defaultProperties.icon = cloned.icon;
-          }
           if (item.roster_form) {
-            this.$store.commit(FORMS.mutations.ADD_ITEM, item.roster_form);
-            this.$store.commit(
-              FORMS.mutations.EXCLUDE_FROM_FETCH,
-              item.roster_form.id
+            this.internalForms = uniqBy(
+              [item.roster_form, ...this.internalForms],
+              'id'
             );
             this.editable.selectedForm = item.roster_form.id;
             this.defaultProperties.selectedForm = cloned.roster_form.id;
           }
           if (item.roles && item.roles.length) {
+            console.log('item.roles', item.roles);
             this.editable.selectedRoles = item.roles.map(({ id }) => id);
             this.defaultProperties.selectedRoles = [
               ...this.editable.selectedRoles,
@@ -397,15 +453,6 @@ export default {
       this.editable = { ...defaultProps };
       this.defaultProperties = { ...defaultProps };
     },
-
-    onChange(value) {
-      if (this.tab === 1 && !this.roles.length) {
-        this.$store.dispatch(ROLES.actions.FETCH, {
-          loader: null,
-          isInitial: false,
-        });
-      }
-    },
   },
 
   computed: {
@@ -422,15 +469,20 @@ export default {
       return Object.keys(this.defaultProperties).some((key) => {
         if (typeof this.editable[key] !== undefined) {
           const editable = this.editable[key];
-          if (key === 'selectedRoles') {
-            return this.editable.selectedRoles.some(
-              (id) => !this.defaultProperties.selectedRoles.includes(id)
-            );
-          } else {
-            return this.defaultProperties[key] !== editable;
-          }
+          return this.defaultProperties[key] !== editable;
+          // if (key === 'selectedRoles') {
+          //   return this.editable.selectedRoles.some(
+          //     (id) => !this.defaultProperties.selectedRoles.includes(id)
+          //   );
+          // } else {
+          //   return this.defaultProperties[key] !== editable;
+          // }
         }
       });
+    },
+
+    hasApplyOnRoles() {
+      return typeof this.editable.apply_roles_on_approval !== undefined;
     },
 
     isRolesTab() {

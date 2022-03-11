@@ -5,10 +5,7 @@ import isObject from 'lodash/isObject';
  * @param {Object} options The options for the function.
  */
 export const FETCH = function (namespace, options) {
-  return async function (
-    { state, commit, dispatch },
-    data = { loading: false }
-  ) {
+  return async function ({ state, commit }, data = { loading: false }) {
     const params = {};
 
     if (!state.hasMore) return;

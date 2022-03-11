@@ -1,11 +1,12 @@
 <template>
   <v-select
+    v-model="computedValue"
     label="Select a form"
-    :items="forms"
+    :items="items"
     :item-text="'name'"
     :item-value="'id'"
   >
-    <template #append-item v-if="forms.length && hasMore">
+    <template #append-item v-if="items.length && hasMore">
       <div
         v-intersect.quiet="{
           options: {
@@ -29,30 +30,41 @@ export default {
     value: {
       type: [String, Number],
     },
+    items: {
+      type: Array,
+      default: () => [],
+    },
   },
 
   methods: {
-    onIntersect(observer, entries, isIntersecting) {
+    async onIntersect(observer, entries, isIntersecting) {
       if (isIntersecting && this.forms.length && this.hasMore) {
-        this.$store.dispatch(FORMS.actions.FETCH, {
+        const { results } = await this.$store.dispatch(FORMS.actions.FETCH, {
           url: '/forms',
           loading: true,
         });
+
+        this.$emit('update:items', [...this.items, ...results]);
       }
     },
   },
 
   computed: {
-    forms() {
-      return this.$store.getters[FORMS.getters.ITEMS];
-    },
-
     loading() {
       return this.$store.getters[FORMS.getters.LOADING];
     },
 
     hasMore() {
       return this.$store.getters[FORMS.getters.HAS_MORE];
+    },
+
+    computedValue: {
+      get() {
+        return this.value;
+      },
+      set(value) {
+        this.$emit('input', value);
+      },
     },
   },
 };

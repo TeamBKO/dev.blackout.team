@@ -7,7 +7,7 @@
       <v-list-item-action>
         <v-checkbox
           multiple
-          v-model="editable.selectedRoles"
+          v-model="computedValue"
           :value="role.id"
         ></v-checkbox>
       </v-list-item-action>
@@ -19,7 +19,7 @@
       }"
     >
       <div class="d-flex justify-center align-center py-2">
-        <v-progress-circular indeterminate></v-progress-circular>
+        <v-progress-circular indeterminate v-if="loading"></v-progress-circular>
       </div>
     </v-list-item>
   </v-list>
@@ -59,7 +59,7 @@ export default {
 
   methods: {
     onIntersect(entries, observer, isIntersecting) {
-      if (this.isIntersecting && this.roles.length && this.hasMore) {
+      if (isIntersecting && this.roles.length && this.hasMore) {
         this.$store.dispatch(ROLES.actions.FETCH, {
           url: '/roles',
           loading: true,
@@ -79,6 +79,15 @@ export default {
 
     hasMore() {
       return this.$store.getters[ROLES.getters.HAS_MORE];
+    },
+
+    computedValue: {
+      get() {
+        return this.value;
+      },
+      set(value) {
+        this.$emit('input', value);
+      },
     },
   },
 };
