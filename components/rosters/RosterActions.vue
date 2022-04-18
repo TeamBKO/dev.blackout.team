@@ -1,22 +1,25 @@
 <template>
-  <v-menu v-model="computedValue" :close-on-content-click="false">
+  <v-menu v-model="computedValue" close-on-content-click>
     <template #activator="{ on }">
       <slot name="activator" v-bind="{ on }" />
     </template>
     <v-list :dense="dense">
       <slot name="top" v-bind="permissions" />
-      <v-list-item
-        v-for="(action, idx) in actions"
-        :key="idx"
-        @click="$emit('changeStatus', action.emit)"
-      >
-        <v-list-item-icon>
-          <v-icon>{{ action.icon }}</v-icon>
-        </v-list-item-icon>
-        <v-list-item-content>
-          <v-list-item-subtitle>{{ action.label }}</v-list-item-subtitle>
-        </v-list-item-content>
-      </v-list-item>
+      <template v-for="(action, idx) in actions">
+        <v-list-item
+          :key="idx"
+          @click="$emit(action.emit, action.emit)"
+          v-if="!$scopedSlots[`action.${action.emit}`]"
+        >
+          <v-list-item-icon>
+            <v-icon>{{ action.icon }}</v-icon>
+          </v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-subtitle>{{ action.label }}</v-list-item-subtitle>
+          </v-list-item-content>
+        </v-list-item>
+        <slot :name="`action.${action.emit}`" v-bind="action" v-else />
+      </template>
       <slot name="bottom" v-bind="permissions" />
     </v-list>
   </v-menu>
@@ -51,8 +54,9 @@ export default {
       type: Boolean,
       default: false,
     },
-    item: {
-      type: Object,
+    isDeletable: {
+      type: Boolean,
+      default: true,
     },
   },
 
@@ -63,7 +67,7 @@ export default {
           icon: 'mdi-check',
           label: 'Approve',
           name: 'can_edit_members',
-          emit: 'approve',
+          emit: 'approved',
           conditions: [this.isApplicantTab, this.isRejectedTab],
         },
         {
@@ -79,9 +83,9 @@ export default {
           name: 'can_remove_members',
           emit: 'removed',
           conditions: [
-            this.isApplicantTab,
-            this.isMemberTab,
-            this.item?.rank?.name !== 'Owner',
+            this.isApplicantTab && this.isDeletable,
+            this.isMemberTab && this.isDeletable,
+            this.isRejectedTab && this.isDeletable,
           ],
         },
       ];

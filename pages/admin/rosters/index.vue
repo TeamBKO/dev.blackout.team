@@ -55,6 +55,11 @@
                 @save="updateRoster(item.id, 'name', $event)"
               />
             </template>
+            <template #item.icon="{ item }">
+              <v-avatar size="42">
+                <img :src="item.icon" alt="" />
+              </v-avatar>
+            </template>
             <template #item.creator="{ item }">
               <v-list-item class="px-0">
                 <v-list-item-avatar>
@@ -102,13 +107,16 @@
               ></v-switch>
             </template>
             <template #item.actions="{ item }">
-              <table-actions
-                @view="$router.push(`/roster/${item.id}`)"
-                @edit="$refs.rosterDialog.setEditableContent(item.id)"
-                @remove="setItemForRemoval(item.id)"
-                :actions="actions"
-                :suffix="tableActionSuffix"
-              ></table-actions>
+              <div class="d-flex justify-end">
+                <table-actions
+                  @view="$router.push(`/admin/rosters/${item.url}`)"
+                  @edit="$refs.rosterDialog.setEditableContent(item.id)"
+                  @remove="setItemForRemoval(item.id)"
+                  :actions="actions"
+                  :suffix="tableActionSuffix"
+                  :isDeletable="item.is_deletable"
+                ></table-actions>
+              </div>
             </template>
           </v-data-table>
           <div
@@ -137,6 +145,7 @@ import setTitle from '~/middleware/setPageTitle.js';
 import itemManagement from '~/mixins/itemManagement.js';
 import filters from '~/mixins/filters.js';
 import filterByInput from '~/mixins/filterByInput.js';
+import mediaPermissions from '~/mixins/mediaPermissions.js';
 
 import ROSTERS from '~/constants/rosters/public.js';
 import FORMS from '~/constants/forms/public.js';
@@ -144,6 +153,7 @@ import FORMS from '~/constants/forms/public.js';
 import UserAvatar from '~/components/avatar/ListAvatar.vue';
 
 import TableActions from '~/components/controls/Actions.vue';
+
 import DeleteDialog from '~/components/dialogs/DeleteDialog.vue';
 import RosterDialog from '~/components/rosters/RosterDialog.vue';
 import RosterTableField from '~/components/rosters/RosterTableField.vue';
@@ -181,9 +191,10 @@ export default {
   },
 
   mixins: [
-    itemManagement(ROSTERS),
+    itemManagement(ROSTERS, 'openDeleteDialog'),
     filters(ROSTERS),
     filterByInput(ROSTERS, 'searchByName'),
+    mediaPermissions,
   ],
 
   // async asyncData(ctx) {
@@ -196,12 +207,12 @@ export default {
 
   data() {
     return {
+      bannerImage: null,
       showFormField: false,
       openFilterSideMenu: false,
       openDeleteDialog: false,
       openRosterDialog: false,
-      nextCursor: '',
-      identifier: '',
+      openMediaDialog: false,
 
       actions: [
         {

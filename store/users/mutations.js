@@ -6,7 +6,7 @@ const mutations = {
 
   [USERS.mutations.ADD_ROLE](state, { user_id, role }) {
     const user = state.items.find((u) => u.id === user_id);
-    if (user) items.roles.push(role);
+    if (user) user.roles.push(role);
   },
 
   [USERS.mutations.REMOVE_ROLE](state, { user_id, role_id }) {
@@ -17,7 +17,5 @@ const mutations = {
     }
   },
 };
-
-console.log(mutations);
 
 export default mutations;

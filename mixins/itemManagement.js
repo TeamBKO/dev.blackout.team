@@ -1,26 +1,26 @@
 import isObject from 'lodash/isObject';
 
-export default function (ns) {
+export default function (ns, property = 'open') {
   if (!isObject(ns)) {
-    throw new Error(
+    throw new ReferenceError(
       'arguement must be an object containing the namespaces of the store.'
     );
   }
 
   if (!ns?.actions?.REMOVE_ITEMS) {
-    throw new Error(
+    throw new ReferenceError(
       "object must have a property containing 'actions.REMOVE_ITEMS'"
     );
   }
 
   if (!ns?.mutations?.SET_SELECTED) {
-    throw new Error(
+    throw new ReferenceError(
       "object must have a property containing 'mutations.SET_SELECTED'"
     );
   }
 
   if (!ns?.getters?.SELECTED) {
-    throw new Error(
+    throw new ReferenceError(
       "object must have a property containing 'getters.SELECTED'"
     );
   }
@@ -37,7 +37,7 @@ export default function (ns) {
       setItemForRemoval(id) {
         this.itemIdToRemove = id;
         this.single = true;
-        this.open = true;
+        this[property] = true;
       },
 
       onDelete() {
@@ -55,7 +55,7 @@ export default function (ns) {
           this.itemIdToRemove = null;
           this.single = false;
         }
-        this.open = false;
+        this[property] = false;
       },
     },
 

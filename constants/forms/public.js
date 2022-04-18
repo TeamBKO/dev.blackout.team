@@ -21,6 +21,7 @@ export default {
   },
   actions: {
     ADD_ITEM: 'forms/addItem',
+    UPDATE_ITEM: 'forms/updateItem',
     REMOVE_ITEMS: 'forms/removeItems',
     CLEAR_ITEMS: 'forms/clearItems',
     CLEAR_FORM: 'forms/clearForm',

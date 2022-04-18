@@ -7,13 +7,6 @@
     </v-row>
     <v-row v-else>
       <v-col cols="12">
-        <v-select
-          v-model="computedStatus"
-          label="Status"
-          :items="statusOptions"
-        ></v-select>
-      </v-col>
-      <v-col cols="12">
         <v-text-field
           v-model="form.roster.name"
           label="Roster"
@@ -46,6 +39,8 @@
 
 <script>
 import FORM from '~/constants/forms/public.js';
+import isNull from 'lodash/isNull';
+import isObject from 'lodash/isObject';
 import FormField from '~/components/form/FormField.vue';
 
 export default {
@@ -63,6 +58,7 @@ export default {
     form: {
       type: Object,
       default: () => {},
+      validator: (v) => isObject(v) || isNull(v),
     },
     readonly: {
       type: Boolean,
@@ -81,7 +77,7 @@ export default {
     return {
       fields: null,
       description: null,
-      statusOptions: ['pending', 'accepted', 'rejected'],
+      statusOptions: ['pending', 'approved', 'rejected'],
 
       isRequired: (v) => !!v || `Field is required.`,
     };
@@ -129,15 +125,6 @@ export default {
   },
 
   computed: {
-    computedStatus: {
-      get() {
-        return this.status;
-      },
-      set(val) {
-        this.$emit('update:status', val);
-      },
-    },
-
     toSave() {
       return this.fields
         ? Object.entries(this.fields).map(([key, value]) => {

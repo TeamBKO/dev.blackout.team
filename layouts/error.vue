@@ -1,8 +1,11 @@
 <template>
   <v-app dark>
     <v-container fill-height fluid>
-      <v-row justify-center align-center>
-        <v-sheet class="px-5 text-center elevation-1" rounded>
+      <v-row justify="center" align="center">
+        <v-sheet
+          class="px-5 text-center elevation-1 justify-center align-center"
+          rounded
+        >
           <template v-if="error.statusCode === 404">
             <v-icon :size="size" v-text="icon"></v-icon>
             <h1>{{ pageNotFound }}</h1>

@@ -15,18 +15,19 @@ const actions = {
     ADD_ITEM: {
       options: {
         url: '/admin/users',
-        successMessage: 'Created new user: %name%',
+        successMessage: 'Created new user: %username%',
       },
     },
     UPDATE_ITEM: {
       options: {
         url: '/admin/users',
-        successMessage: 'Updated user: %name%',
+        successMessage: 'Updated user: %username%',
       },
     },
     REMOVE_ITEMS: {
       options: {
         url: '/admin/users',
+        successMessage: 'Removed user: %username%',
       },
     },
     CLEAR_ITEMS: {
@@ -62,13 +63,11 @@ const actions = {
         })
       ).data;
 
-      console.log(user);
-
       commit(USERS.mutations.REMOVE_ROLE, user);
-    } catch (err) {}
+    } catch (err) {
+      this.$toast.error(err.message, { position: 'top-center' });
+    }
   },
 };
-
-console.log(actions);
 
 export default actions;

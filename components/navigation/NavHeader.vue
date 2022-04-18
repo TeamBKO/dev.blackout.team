@@ -28,11 +28,6 @@
               :link="link"
               :class="{ 'ml-4': idx === 0 }"
             ></nav-header-item>
-            <roster-applicant-dialog
-              v-model="showForm"
-              v-if="canViewForms"
-              :button="true"
-            ></roster-applicant-dialog>
             <v-spacer></v-spacer>
             <auth-dialog
               v-model="showAuth"
@@ -90,7 +85,7 @@ import NavMobile from './NavMobile.vue';
 import NavHeaderItem from './NavHeaderItem.vue';
 import DiscordButton from '~/components/dialogs/DiscordButton.vue';
 
-import RosterApplicantDialog from '~/components/rosters/RosterApplicantDialog.vue';
+import RosterApplicantDialog from '~/components/rosters/RosterApplyFormDialog.vue';
 import AuthDialog from '~/components/auth/AuthDialog.vue';
 
 import menu from '~/constants/menu/public.js';
@@ -128,20 +123,25 @@ export default {
 
   computed: {
     links() {
-      return this.$store.getters[menu.getters.LINKS];
+      return this.$store.getters[menu.getters.LINKS].reduce((arr, item) => {
+        const { conditions } = item;
+        if (conditions) {
+          const isTruthy = conditions.some((condition) => {
+            if (condition === 'loggedIn') {
+              return this.$auth.loggedIn;
+            }
+          });
+          if (!isTruthy) return arr;
+        }
+        arr.push(item);
+        return arr;
+      }, []);
     },
 
     canViewEvents() {
       return (
         this.$auth.loggedIn &&
         this.$auth.hasScope(this.$permissions.VIEW_ALL_EVENTS)
-      );
-    },
-
-    canViewForms() {
-      return (
-        this.$auth.loggedIn &&
-        this.$auth.hasScope(this.$permissions.VIEW_ALL_FORMS)
       );
     },
 

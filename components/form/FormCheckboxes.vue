@@ -85,7 +85,6 @@ export default {
         return this.value ? this.value : this.internalValue;
       },
       set(val) {
-        console.log('computed', val);
         this.internalValue = val;
         this.$emit('input', val);
         this.$emit('change', val);

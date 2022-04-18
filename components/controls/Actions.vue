@@ -64,18 +64,31 @@ export default {
 
   computed: {
     computedActions() {
-      return this.actions.reduce((output, action) => {
+      // return this.actions.reduce((arr, action) => {
+      //   if (this.$auth.hasScope(action.scope)) {
+      //     if (!this.isDeletable && /^delete:(all|own)/.test(action.scope)) {
+      //       return arr;
+      //     }
+      //     action.label = action.text.toLowerCase();
+      //     action.text =
+      //       action.text.charAt(0).toUpperCase() + action.text.slice(1);
+
+      //     arr.push(action);
+      //   }
+      //   return output;
+      // }, []);
+      return this.actions.reduce((arr, action) => {
         if (this.$auth.hasScope(action.scope)) {
           if (!this.isDeletable && /^delete:(all|own)/.test(action.scope)) {
-            return output;
+            return arr;
           }
           action.label = action.text.toLowerCase();
           action.text =
             action.text.charAt(0).toUpperCase() + action.text.slice(1);
 
-          output.push(action);
+          arr.push(action);
         }
-        return output;
+        return arr;
       }, []);
     },
   },

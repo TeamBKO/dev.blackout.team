@@ -1,3 +1,3 @@
 import removeNamespace from '~/utilities/removeNamespace';
-import forms from './public';
-export default removeNamespace('rosters/', forms);
+import rosters from './public';
+export default removeNamespace('rosters/', rosters);

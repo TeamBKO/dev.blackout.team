@@ -32,6 +32,9 @@ const mutations = {
   [LISTS.mutations.SET_SELECTED](state, value) {
     state.selected = value;
   },
+  [LISTS.mutations.SET_HAS_MORE](state, hasMore) {
+    state.hasMore = hasMore;
+  },
   [LISTS.mutations.SET_PARAM](state, { param, value }) {
     state.queryParams[param] = value;
   },
@@ -41,7 +44,7 @@ const mutations = {
     if (idx !== -1) items.splice(idx, 1, item);
   },
   [LISTS.mutations.RESET_PARAMS](state) {
-    state.queryParams = defaultQueryParams;
+    state.queryParams = { ...defaultQueryParams };
   },
   [LISTS.mutations.SET_TYPE](state, type) {
     state.type = type;

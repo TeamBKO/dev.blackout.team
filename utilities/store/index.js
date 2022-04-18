@@ -18,8 +18,11 @@ export const mapStateToStore = function mapStateToStore(queryParams, picked) {
   return state;
 };
 
-export const mapGettersToStore = function mapGettersToStore(namespace) {
-  return {
+export const mapGettersToStore = function mapGettersToStore(
+  namespace,
+  selected
+) {
+  const getters = {
     [namespace.getters.ITEMS]: (state) => state.items,
     [namespace.getters.SELECTED]: (state) => state.selected,
     [namespace.getters.SELECTED_IDS]: (state) =>
@@ -29,6 +32,10 @@ export const mapGettersToStore = function mapGettersToStore(namespace) {
     [namespace.getters.HAS_MORE]: (state) => state.hasMore,
     [namespace.getters.LOADING]: (state) => state.loading,
   };
+
+  const picked = pick(getters, selected);
+
+  return selected && selected.length ? picked : getters;
 };
 
 export const mapMutationsToStore = function mapMutationsToStore(

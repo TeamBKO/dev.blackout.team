@@ -20,7 +20,7 @@
               <span>Filters</span>
             </v-btn>
             <table-delete-dialog
-              v-model="open"
+              v-model="openDeleteDialog"
               v-if="canDeleteAll"
               :length="selectedItems.length"
               :single="single"
@@ -95,6 +95,7 @@
                 @remove="setItemForRemoval(item.id)"
                 :actions="actions"
                 :suffix="tableActionSuffix"
+                :isDeletable="item.is_deletable"
               ></table-actions>
             </template>
             <template #footer> </template>
@@ -181,7 +182,7 @@ export default {
   mixins: [
     filters(USERS),
     // clearPage(USERS),
-    itemManagement(USERS),
+    itemManagement(USERS, 'openDeleteDialog'),
     filterByInput(USERS, 'searchByUsername'),
   ],
 
@@ -215,7 +216,7 @@ export default {
       tableActionSuffix: 'users',
       icon: 'mdi-trash-can-outline',
 
-      open: false,
+      openDeleteDialog: false,
       openMediaDialog: false,
       openFilterSideMenu: false,
       openUserDialog: false,

@@ -12,16 +12,15 @@
         ></v-checkbox>
       </v-list-item-action>
     </v-list-item>
-    <v-list-item
+    <div
+      class="d-flex justify-center align-center py-2"
       v-intersect.quiet="{
         options: { threshold: 1.0 },
         handler: onIntersect,
       }"
     >
-      <div class="d-flex justify-center align-center py-2">
-        <v-progress-circular indeterminate v-if="loading"></v-progress-circular>
-      </div>
-    </v-list-item>
+      <v-progress-circular indeterminate v-if="loading"></v-progress-circular>
+    </div>
   </v-list>
 </template>
 
@@ -74,7 +73,7 @@ export default {
     },
 
     loading() {
-      return this.$store.getters[ROLES.getters.ITEMS];
+      return this.$store.getters[ROLES.getters.LOADING];
     },
 
     hasMore() {

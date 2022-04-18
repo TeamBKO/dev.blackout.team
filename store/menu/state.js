@@ -33,7 +33,7 @@ const state = () => ({
         },
       ],
     },
-    { title: 'Tools', to: '/' },
+    { title: 'Rosters', to: '/rosters', conditions: ['loggedIn'] },
     // { icon: "mdi-calendar", title: "Events", to: "/events" }
   ],
 });

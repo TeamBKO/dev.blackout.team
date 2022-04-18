@@ -1,4 +1,4 @@
 import removeNamespace from '~/utilities/removeNamespace';
-import lists from './public.js';
+import LISTS from './public.js';
 
-export default removeNamespace('lists/', lists);
+export default removeNamespace('lists/', LISTS);

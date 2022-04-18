@@ -1,7 +1,10 @@
 <template>
   <v-dialog persistent v-model="open" :width="width">
-    <template #activator="{ on }">
-      <v-btn color="error" large block v-on="on">Delete Account</v-btn>
+    <template #activator="props">
+      <slot name="activator" v-bind="props" v-if="$scopedSlots.activator" />
+      <v-btn color="error" large block v-on="props.on" v-else
+        >Delete Account</v-btn
+      >
     </template>
     <v-card>
       <v-card-title>

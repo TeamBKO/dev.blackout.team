@@ -70,6 +70,7 @@
                 @remove="setItemForRemoval(item.id)"
                 :actions="actions"
                 :suffix="name"
+                :isDeletable="item.is_deletable"
               ></table-actions>
             </div>
           </template>

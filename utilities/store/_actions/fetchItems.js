@@ -1,4 +1,5 @@
 import isObject from 'lodash/isObject';
+import isUndefined from 'lodash/isUndefined';
 /**
  * Sends a request to the api to retrieve items. Updates the store.
  * @param {Object} namespace The namespace of the store.
@@ -76,7 +77,7 @@ export const FETCH = function (namespace, options) {
       // }
 
       if (items && items.results && items.results.length) {
-        if (typeof items.pageInfo.hasMore !== undefined) {
+        if (!isUndefined(items.pageInfo.hasMore)) {
           commit(namespace.mutations.SET_HAS_MORE, items.pageInfo.hasMore);
         }
         commit(namespace.mutations.SET_ITEMS, items.results);

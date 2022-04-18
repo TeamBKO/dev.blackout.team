@@ -1,4 +1,4 @@
-import { clearItems } from './clearItems.js';
+import { CLEAR_ITEMS as clearItems } from './clearItems.js';
 export default {
   name: 'RESET_FILTERS',
   execute: function RESET_FILTERS(namespace, options) {

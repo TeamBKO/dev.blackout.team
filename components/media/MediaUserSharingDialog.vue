@@ -41,11 +41,15 @@
             </v-list-item-action>
           </v-list-item>
         </v-list>
-        <infinite-loading
-          :identifier="identifier"
-          @infinite="loadList"
-          v-if="users && users.length"
-        ></infinite-loading>
+        <div
+          class="d-flex justify-center align-center py-2"
+          v-intersect="{ options: { threshold: 1.0 }, handler: onIntersect }"
+        >
+          <v-progress-circular
+            indeterminate
+            v-if="loading"
+          ></v-progress-circular>
+        </div>
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
@@ -92,9 +96,8 @@ export default {
 
   data() {
     return {
-      isLoading: false,
       isSending: false,
-      firstLoad: true,
+      loading: false,
       distance: 0,
       searchByUsername: '',
       mediaID: '',
@@ -104,7 +107,6 @@ export default {
       users: [],
       currentlySelected: [],
       baseSelected: [],
-      identifier: nanoid(),
     };
   },
 
@@ -113,7 +115,6 @@ export default {
       if (!isOpen) {
         this.$nextTick(() => {
           setTimeout(() => {
-            this.firstLoad = true;
             this.mediaID = '';
             this.nextCursor = '';
             this.sharingNextCursor = '';
@@ -122,9 +123,12 @@ export default {
             this.users = [];
             this.currentlySelected = [];
             this.baseSelected = [];
-            this.identifier = nanoid();
           }, 50);
         });
+      } else {
+        if (!this.users?.length) {
+          this.loadList();
+        }
       }
     },
   },
@@ -152,6 +156,12 @@ export default {
     //     { trailing: true }
     //   )();
     // },
+
+    async onIntersect(observer, entries, isIntersecting) {
+      if (isIntersecting && this.hasMore && this.open) {
+        await this.loadList();
+      }
+    },
 
     async onInputChange(value) {
       this.nextCursor = '';
@@ -204,15 +214,6 @@ export default {
     },
 
     async loadList($state, id) {
-      if ($state && this.firstLoad) {
-        console.log('invoking with first load');
-        $state.loaded();
-        this.firstLoad = false;
-        return;
-      }
-
-      console.log('invoking');
-
       if (!this.mediaID && id) {
         this.mediaID = id;
       }
@@ -234,9 +235,7 @@ export default {
       if (this.searchByUsername) {
         Object.assign(params, { searchBy: this.searchByUsername });
       }
-
-      // const url = this.firstLoad ? `/media/share/${id}` : '/users';
-
+      this.loading = true;
       try {
         const { users, sharing } = (
           await this.$axios.get(`/media/share/${this.mediaID}`, { params })
@@ -255,26 +254,23 @@ export default {
         }
 
         if (users && users.results && users.results.length) {
-          this.users = this.firstLoad
-            ? users.results
-            : this.users.concat(users.results);
+          this.users = this.users.concat(users.results);
           if (users.pageInfo.next) {
             this.nextCursor = users.pageInfo.next;
           }
-          if (users.pageInfo.prev) {
-            this.prevCursor = users.pageInfo.prev;
+          if (users.pageInfo.previous) {
+            this.prevCursor = users.pageInfo.previous;
           }
-          if (users.pageInfo.hasMore) {
-            if ($state) $state.loaded();
-          } else {
-            if ($state) $state.complete();
+          if (users?.pageInfo?.hasMore) {
+            this.hasMore = users.pageInfo.hasMore;
           }
         } else {
-          if ($state) $state.complete();
+          this.hasMore = false;
         }
       } catch (err) {
         console.error(err);
-        if ($state) $state.complete();
+      } finally {
+        this.loading = false;
       }
     },
   },

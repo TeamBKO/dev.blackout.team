@@ -103,6 +103,9 @@ export default {
       type: Boolean,
       default: false,
     },
+    newlyAdded: {
+      type: Array,
+    },
   },
 
   data() {

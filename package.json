@@ -23,6 +23,7 @@
     "js-cookie": "^3.0.1",
     "nanoid": "^3.2.0",
     "nuxt": "^2.15.8",
+    "nuxt-route-meta": "^2.3.4",
     "nuxt-socket-io": "^2.0.3",
     "pluralize": "^8.0.0",
     "vue": "^2.6.14",

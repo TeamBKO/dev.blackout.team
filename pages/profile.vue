@@ -87,12 +87,6 @@
                       :key="key"
                       :md="input.columns.md"
                     >
-                      <!-- <profile-input
-                        v-model="input.value"
-                        :item="input"
-                        :show.sync="input.show"
-                        :readonly="input.readonly ? input.readonly : false"
-                      /> -->
                       <form-field
                         v-model="input.value"
                         :field="input.info"
@@ -105,11 +99,47 @@
                   <v-row v-if="isPersonal && enableSocialAuthentication">
                     <v-col cols="12">
                       <v-card-title style="padding: 0px"
-                        >Link To Social</v-card-title
+                        >Social Accounts</v-card-title
                       >
                       <v-divider></v-divider>
                     </v-col>
-                    <v-col cols="12" v-if="info.local">
+                    <v-col cols="12">
+                      <v-list>
+                        <v-list-item class="px-0" two-lines v-if="info.local">
+                          <v-list-item-content>
+                            <v-list-item-title>Discord</v-list-item-title>
+                            <v-list-item-subtitle
+                              >Linking your account to discord grants you the
+                              ability to log in using discord
+                              credentials.</v-list-item-subtitle
+                            >
+                          </v-list-item-content>
+                          <v-list-item-action>
+                            <v-btn
+                              :color="'#7289da'"
+                              @click="manageDiscordAccount"
+                            >
+                              <v-icon left>mdi-discord</v-icon>
+                              <span>{{ discordButtonText }}</span>
+                            </v-btn>
+                          </v-list-item-action>
+                        </v-list-item>
+                        <v-list-item class="px-0">
+                          <v-spacer></v-spacer>
+                          <v-list-item-action>
+                            <delete-self-button>
+                              <template #activator="{ on }">
+                                <v-btn text color="error" v-on="on"
+                                  ><v-icon left>mdi-trash-can-outline</v-icon
+                                  ><span>Delete Account</span></v-btn
+                                >
+                              </template>
+                            </delete-self-button>
+                          </v-list-item-action>
+                        </v-list-item>
+                      </v-list>
+                    </v-col>
+                    <!-- <v-col cols="12" v-if="info.local">
                       <v-btn
                         block
                         large
@@ -122,7 +152,7 @@
                     </v-col>
                     <v-col cols="12" v-if="allowUserToDeleteAccount">
                       <delete-self-button></delete-self-button>
-                    </v-col>
+                    </v-col> -->
                   </v-row>
                 </v-form>
               </v-card-text>

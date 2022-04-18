@@ -118,7 +118,7 @@ export default {
     RoleDialog,
   },
 
-  mixins: [itemManagement(ROLES)],
+  mixins: [itemManagement(ROLES, 'openDeleteDialog')],
 
   middleware: [
     'auth',
@@ -142,7 +142,7 @@ export default {
     return {
       icon: 'mdi-trash-can-outline',
       editIcon: 'mdi-pencil-outline',
-      open: false,
+      openDeleteDialog: false,
 
       suffix: 'roles',
 

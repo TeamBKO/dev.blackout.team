@@ -138,17 +138,21 @@ export default {
           Object.assign(data, { details: this.detailsToUpdate });
         }
 
-        if (this.toAdd && this.toAdd.length) {
-          Object.assign(data, { added: this.toAdd });
+        if (this.validFields.length) {
+          Object.assign(data, { fields: this.validFields });
         }
 
-        if (this.toUpdate && this.toUpdate.length) {
-          Object.assign(data, { update: this.toUpdate });
-        }
+        // if (this.toAdd && this.toAdd.length) {
+        //   Object.assign(data, { added: this.toAdd });
+        // }
 
-        if (this.toRemove.length) {
-          Object.assign(data, { remove: this.toRemove });
-        }
+        // if (this.toUpdate && this.toUpdate.length) {
+        //   Object.assign(data, { update: this.toUpdate });
+        // }
+
+        // if (this.toRemove.length) {
+        //   Object.assign(data, { remove: this.toRemove });
+        // }
         try {
           // await this.editForm({ id: this.form.id, data });
           await this.$store.dispatch(FORMS.actions.UPDATE_ITEM, {

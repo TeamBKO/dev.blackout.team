@@ -44,6 +44,7 @@ export default {
     '@nuxtjs/toast',
     '@nuxtjs/recaptcha',
     'nuxt-socket-io',
+    'nuxt-route-meta',
   ],
 
   io: {

@@ -1,6 +1,6 @@
 <template>
   <v-dialog v-model="openDialog" persistent :max-width="maxWidth">
-    <template #activator="{ on }">
+    <template #activator="{ on }" v-if="!$scopedSlots.activator">
       <v-btn
         class="v-tab"
         text
@@ -26,6 +26,9 @@
         </v-tooltip>
         <span>{{ length }}</span>
       </v-btn>
+    </template>
+    <template #activator v-else>
+      <slot name="activator" v-bind="{ on }" />
     </template>
     <v-card>
       <v-card-title
@@ -88,13 +91,6 @@ export default {
   computed: {
     numOfItemsMarkedForDeletion() {
       return this.single ? 1 : this.length;
-    },
-
-    canDelete() {
-      return (
-        this.$auth.loggedIn &&
-        this.$auth.hasScope([this.$permissions.DELETE_ALL_MEDIA])
-      );
     },
 
     openDialog: {

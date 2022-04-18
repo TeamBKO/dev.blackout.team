@@ -245,7 +245,7 @@ export default {
         Object.assign(data, { discord_roles: this.selectedDiscordRoles });
       }
 
-      this.addRole(data);
+      this.$store.dispatch(ROLES.actions.ADD_ITEM, data);
     },
 
     edit() {

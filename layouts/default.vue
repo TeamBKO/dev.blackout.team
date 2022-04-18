@@ -6,9 +6,9 @@
     </v-main>
     <nav-footer />
     <status-dialog />
-    <no-ssr>
+    <client-only>
       <cookie-policy />
-    </no-ssr>
+    </client-only>
   </v-app>
 </template>
 

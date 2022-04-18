@@ -5,7 +5,7 @@
       <v-col md="6" sm="12">
         <div class="d-flex align-center">
           <delete-dialog
-            v-model="open"
+            v-model="openDeleteDialog"
             v-if="canDeleteAll"
             @deleteAll="onDelete"
             @cancel="onCancel"
@@ -127,6 +127,7 @@
             <table-actions
               :actions="actions"
               :suffix="$route.params.type"
+              :isDeletable="item.is_deletable"
               @remove="setItemForRemoval(item.id)"
             ></table-actions>
           </template>
@@ -197,7 +198,7 @@ export default {
     TableField,
   },
 
-  mixins: [itemManagement(LISTS), clearPage(LISTS)],
+  mixins: [itemManagement(LISTS, 'openDeleteDialog')],
 
   validate({ params }) {
     return types.test(params.type);
@@ -207,22 +208,25 @@ export default {
     'auth',
     ({ $auth, $permissions, store, redirect, params }) => {
       const { VIEW_ALL_ADMIN } = $permissions;
-      if ($auth.loggedIn) {
-        if (!$auth.hasScope(VIEW_ALL_ADMIN)) {
-          redirect('/');
-        }
-      } else {
-        redirect('/');
+      if (!$auth.hasScope(VIEW_ALL_ADMIN)) {
+        return redirect('/');
       }
+
+      const _params = params.type.toLowerCase();
+
       store.commit(PAGE.mutations.SET_TITLE, `View ${capitalize(params.type)}`);
       store.commit(LISTS.mutations.SET_TYPE, params.type);
+      store.dispatch(LISTS.actions.CLEAR_ITEMS); //clear items before the next list is displayed.
+      store.dispatch(LISTS.actions.FETCH, {
+        type: _params,
+      });
     },
   ],
 
   data() {
     return {
       icon: 'mdi-trash-can-outline',
-      open: false,
+      openDeleteDialog: false,
       openMediaDialog: false,
       tagColorPickerMenu: false,
       openAddItemDialog: false,
@@ -403,6 +407,10 @@ export default {
   computed: {
     loading() {
       return this.$store.getters[LISTS.getters.LOADING];
+    },
+
+    hasMore() {
+      return this.$store.getters[LISTS.getters.HAS_MORE];
     },
 
     endPoint() {

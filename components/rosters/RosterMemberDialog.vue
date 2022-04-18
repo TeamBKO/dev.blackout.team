@@ -1,0 +1,233 @@
+<template>
+  <v-dialog v-model="computedOpen" fullscreen>
+    <template #activator="items" v-if="$scopedSlots.activator">
+      <slot name="activator" v-bind="items" />
+    </template>
+    <v-card>
+      <v-toolbar>
+        <v-toolbar-title>
+          <span>Edit:</span>
+          <user-avatar class="mx-2" :item="{ username, avatar }" :size="40" />
+          <span>{{ username }}</span>
+        </v-toolbar-title>
+        <v-spacer></v-spacer>
+        <v-btn icon @click="open = false">
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+      </v-toolbar>
+      <v-card-text>
+        <v-container>
+          <v-row>
+            <v-col cols="12" v-if="permissions.can_edit_member_ranks">
+              <roster-rank-selector
+                v-model="selectedRank"
+                :id="id"
+                :priority="priority"
+              ></roster-rank-selector>
+            </v-col>
+            <v-col cols="12">
+              <roster-permissions
+                v-model="member.permissions"
+                :permissions="permissions"
+                @change="selectedPermissions = $event"
+              ></roster-permissions>
+            </v-col>
+          </v-row>
+        </v-container>
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn text color="coral" @click="save">Save</v-btn>
+        <v-btn text @click="reset">Reset</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+</template>
+
+<script>
+const defaultMember = {
+  id: null,
+  rank: null,
+  permissions: {
+    can_add_members: false,
+    can_edit_members: false,
+    can_edit_members_rank: false,
+    can_remove_members: false,
+    can_add_ranks: false,
+    can_edit_ranks: false,
+    can_remove_ranks: false,
+    can_edit_roster_details: false,
+    can_delete_roster: false,
+  },
+};
+import RANKS from '~/constants/rosters/ranks/public.js';
+import RosterPermissions from '~/components/rosters/RosterPermissions.vue';
+import RosterRankSelector from '~/components/rosters/RosterRankSelector.vue';
+import UserAvatar from '~/components/avatar/ListAvatar.vue';
+export default {
+  name: 'RosterMemberDialog',
+
+  components: { RosterPermissions, RosterRankSelector, UserAvatar },
+
+  props: {
+    value: {
+      type: Boolean,
+      default: false,
+    },
+    permissions: {
+      type: Object,
+      default: () => {},
+    },
+    id: {
+      type: String,
+    },
+    priority: {
+      type: Number,
+    },
+  },
+
+  watch: {
+    open(v) {
+      if (!v) {
+        this.username = '';
+        this.avatar = null;
+        this.member = { ...defaultMember };
+        this.selectedRank = '';
+        this.selectedRank = null;
+      }
+    },
+  },
+
+  data() {
+    return {
+      open: false,
+      username: '',
+      avatar: null,
+      member: {
+        id: null,
+        rank: null,
+        permissions: {
+          can_add_members: false,
+          can_edit_members: false,
+          can_edit_members_rank: false,
+          can_remove_members: false,
+          can_add_ranks: false,
+          can_edit_ranks: false,
+          can_remove_ranks: false,
+          can_edit_roster_details: false,
+          can_delete_roster: false,
+        },
+      },
+      selectedPermissions: null,
+      selectedRank: '',
+    };
+  },
+
+  methods: {
+    reset() {
+      this.selectedPermissions = { ...this.member.permissions };
+      this.selectedRank = this.member.rank.id;
+    },
+    save() {
+      const member = { id: this.member.id };
+      const isDiff = Object.keys(this.selectedPermissions).some((key) => {
+        return this.selectedPermissions[key] !== this.member.permissions[key];
+      });
+
+      if (isDiff) {
+        Object.assign(member, {
+          permissions: {
+            id: this.permissions.id,
+            ...Object.keys(selectedPermissions).reduce((obj, key) => {
+              if (
+                this.selectedPermissions[key] !== this.member.permissions[key]
+              ) {
+                obj[key] = this.selectedPermissions[key];
+              }
+              return obj;
+            }, {}),
+          },
+        });
+      }
+
+      if (this.selectedRank !== this.member.rank.id) {
+        Object.assign(member, { roster_rank_id: this.selectedRank });
+      }
+
+      this.$emit('save', member);
+    },
+    async getMember(id) {
+      const params = {};
+
+      if (!this.ranks?.length) {
+        Object.assign(params, {
+          getRanks: true,
+          roster_id: this.id,
+        });
+      }
+
+      try {
+        const { member, ranks } = await this.$axios.$get(
+          `/rosters/member/${id}`,
+          {
+            params,
+          }
+        );
+
+        console.log(member);
+
+        if (member) {
+          const { username, avatar, ...m } = member;
+          this.username = username;
+          this.avatar = avatar;
+          this.member = m;
+        }
+
+        this.selectedRank = this.member.rank.id;
+
+        if (ranks?.results?.length) {
+          this.$store.commit(RANKS.mutations.SET_ITEMS, ranks.results);
+          if (ranks?.pageInfo?.next) {
+            this.$store.commit(RANKS.mutations.SET_PARAM, {
+              param: 'nextCursor',
+              value: ranks.pageInfo.next,
+            });
+          }
+          if (ranks?.pageInfo?.previous) {
+            this.$store.commit(RANKS.mutations.SET_PARAM, {
+              param: 'prevCursor',
+              value: ranks.pageInfo.previous,
+            });
+          }
+
+          if (ranks?.pageInfo?.hasMore) {
+            this.$store.commit(
+              RANKS.mutations.SET_HAS_MORE,
+              ranks.pageInfo.hasMore
+            );
+          }
+        }
+      } catch (err) {
+        console.log(err);
+        this.$toast.error(err.response.data.message, {
+          position: 'top-center',
+        });
+      }
+
+      this.open = true;
+    },
+  },
+
+  computed: {
+    computedOpen: {
+      get() {
+        return this.value || this.open;
+      },
+      set(value) {
+        this.open = true;
+        this.$emit('input', value);
+      },
+    },
+  },
+};
+</script>

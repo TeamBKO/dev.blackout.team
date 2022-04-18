@@ -6,8 +6,17 @@
     :item-text="'name'"
     :item-value="'id'"
   >
-    <template #append-item v-if="items.length && hasMore">
+    <template #append-item>
+      <v-list-item v-if="computedValue" @click="computedValue = ''">
+        <v-list-item-content>
+          <v-list-item-title>
+            <v-icon left>mdi-close</v-icon>
+            <span>Remove Form</span>
+          </v-list-item-title>
+        </v-list-item-content>
+      </v-list-item>
       <div
+        v-if="items.length && hasMore"
         v-intersect.quiet="{
           options: {
             threshold: 1.0,
