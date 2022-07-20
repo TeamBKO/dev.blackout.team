@@ -15,7 +15,6 @@ export default {
         return item;
       });
 
-      // state[key] = state[key].concat(items);
       state[key] = state[key].concat(newItems);
     };
   },

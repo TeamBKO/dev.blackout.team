@@ -38,7 +38,6 @@ export const ADD_ITEM = function (namespace, options) {
         duration: options.messageDuration || 2000,
       });
     } catch (err) {
-      console.error(err);
       const text = 'Encountered a problem. Please contact the administrator.';
       this.$toast.error(text, { position: 'top-center' });
       return Promise.reject(err);

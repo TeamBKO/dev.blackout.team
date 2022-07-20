@@ -51,7 +51,7 @@ export default {
       this.timer = setInterval(() => {
         let now = new Date().getTime();
         this.count = endTime - now;
-        if (this.count <= 0) {
+        if (this.count === 0) {
           clearInterval(this.timer);
           this.timer = null;
           this.count = 0;

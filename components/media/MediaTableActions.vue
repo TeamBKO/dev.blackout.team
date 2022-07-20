@@ -8,19 +8,11 @@
     <v-list dense>
       <slot
         name="top"
-        v-bind="{ canDelete, canDeleteAll, canDeleteOwn, isOwner, canShare }"
+        v-bind="{ canDelete, canDeleteAll, canDeleteOwn, isOwner }"
       />
-      <v-list-item v-if="canShare" @click="$emit('share')" role="button">
-        <v-list-item-content>
-          <v-list-item-title>
-            <v-icon left small>mdi-share-variant</v-icon>
-            <span>Share</span>
-          </v-list-item-title>
-        </v-list-item-content>
-      </v-list-item>
       <slot
         name="bottom"
-        v-bind="{ canDelete, canDeleteAll, canDeleteOwn, isOwner, canShare }"
+        v-bind="{ canDelete, canDeleteAll, canDeleteOwn, isOwner }"
       />
     </v-list>
   </v-menu>
@@ -59,14 +51,6 @@ export default {
       return (
         this.$auth.loggedIn &&
         ((this.isOwner && this.canDeleteOwn) || this.canDeleteAll)
-      );
-    },
-    canShare() {
-      return this.isOwner && this.allowUsersToShareMedia;
-    },
-    allowUsersToShareMedia() {
-      return this.$store.getters[SETTINGS.getters.SETTINGS_VALUES](
-        'enableAccountMediaSharing'
       );
     },
   },

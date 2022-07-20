@@ -22,7 +22,6 @@
               </v-col>
               <v-col cols="12">
                 <recaptcha
-                  ref=""
                   :data-theme="recaptchaTheme"
                   @error="onError"
                   @expired="resetRecaptcha"
@@ -37,7 +36,7 @@
         </v-alert>
       </v-card-text>
       <v-card-actions v-if="!message">
-        <v-btn block @click="send">Submit</v-btn>
+        <v-btn block @click="send" :disabled="!isValid">Submit</v-btn>
       </v-card-actions>
       <v-overlay absolute v-model="isSending">
         <v-progress-circular indeterminate size="64"></v-progress-circular>
@@ -98,7 +97,6 @@ export default {
       try {
         const resp = (
           await this.$axios.post('/users/password-reset', {
-            type: 'reset',
             email: this.email,
             gresponse: this.gresponse,
           })
@@ -109,7 +107,7 @@ export default {
       } catch (err) {
         console.log(err);
         this.reset();
-        this.$toast.error(err.data.message, {
+        this.$toast.error(err.response.data.message, {
           position: 'top-center',
         });
       } finally {
@@ -123,6 +121,10 @@ export default {
   computed: {
     recaptchaTheme() {
       return this.light ? 'light' : 'dark';
+    },
+
+    isValid() {
+      return this.gresponse && this.valid;
     },
   },
 };

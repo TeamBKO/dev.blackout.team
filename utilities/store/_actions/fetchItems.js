@@ -94,32 +94,11 @@ export const FETCH = function (namespace, options) {
             value: items.pageInfo.previous,
           });
         }
-        // commit(namespace.mutations.SET_HAS_MORE, []);
       } else {
         commit(namespace.mutations.SET_HAS_MORE, false);
       }
       return items;
     } catch (err) {
-      console.log(err);
-      // this.$toast.error('Encountered an error.', {
-      //   duration: null,
-      //   action: [
-      //     {
-      //       text: 'Retry',
-      //       onClick: (e, toastObject) => {
-      //         toastObject.goAway(0);
-      //         dispatch(namespace.actions.FETCH);
-      //       },
-      //     },
-      //     {
-      //       text: 'Close',
-      //       onClick: (e, toastObject) => {
-      //         toastObject.goAway(0);
-      //       },
-      //     },
-      //   ],
-      // });
-
       return Promise.reject(err);
     } finally {
       if (data && data.loading) {

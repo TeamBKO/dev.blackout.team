@@ -128,7 +128,8 @@ export default {
     toSave() {
       return this.fields
         ? Object.entries(this.fields).map(([key, value]) => {
-            const id = parseInt(key.match(/\d{1,}/)[0], 10);
+            // const id = parseInt(key.match(/\d{1,}/)[0], 10);
+            const id = key.split('_')[1];
             return { id, value };
           })
         : [];

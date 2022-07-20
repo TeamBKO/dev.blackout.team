@@ -10,6 +10,7 @@
             v-model="computedValue"
             :label="label"
             :placeholder="label"
+            :rules="[isRequired('Field')]"
           >
             <template #prepend>
               <v-icon class="handle" small v-text="icon"></v-icon>
@@ -28,7 +29,27 @@
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </div>
-      <v-switch label="Optional" v-model="computedOptional"></v-switch>
+      <!-- <v-switch label="Optional" v-model="computedOptional"></v-switch> -->
+      <div class="d-flex flex-column">
+        <div class="d-flex">
+          <v-switch label="Optional" v-model="computedOptional"></v-switch>
+        </div>
+        <div class="d-flex" v-if="isSingleAnswer">
+          <div class="d-flex-inline flex-shrink-1">
+            <v-switch
+              label="Use as column"
+              v-model="computedUseAsColumn"
+            ></v-switch>
+          </div>
+          <div class="d-flex-inline flex-grow-1 pl-3">
+            <v-text-field
+              v-model="computedAlias"
+              label="Alias"
+              :disabled="!computedUseAsColumn"
+            ></v-text-field>
+          </div>
+        </div>
+      </div>
       <v-row class="pl-12" v-if="field.options && field.options.length">
         <form-field-option
           v-for="(option, o) in field.options"
@@ -56,6 +77,7 @@
 
 <script>
 import { createNamespacedHelpers } from 'vuex';
+import { isRequired, minLength, maxLength } from '~/utilities/validators';
 import FormSelectMenu from './FormSelectMenu.vue';
 import FormFieldOption from './FormFieldQuestionOption.vue';
 
@@ -85,6 +107,14 @@ export default {
     },
     optional: {
       type: Boolean,
+      default: false,
+    },
+    useAsColumn: {
+      type: Boolean,
+      default: false,
+    },
+    alias: {
+      type: String,
     },
     options: {
       type: [Array, Object],
@@ -101,8 +131,6 @@ export default {
   data() {
     return {
       icon: 'mdi-menu',
-      isRequired: (v) =>
-        (v.length && isAlphanumeric(v)) || 'Field is required.',
       types: [
         { icon: 'mdi-form-textbox', type: 'textfield', name: 'Short answer' },
         { icon: 'mdi-form-textarea', type: 'textarea', name: 'Long answer' },
@@ -129,6 +157,9 @@ export default {
   },
 
   methods: {
+    isRequired,
+    minLength,
+    maxLength,
     clearOptions(i) {
       this.$emit('clearOption', i);
     },
@@ -166,6 +197,10 @@ export default {
     //   return this.field.options;
     // },
 
+    isSingleAnswer() {
+      return this.type === 'multiple' || this.type === 'select';
+    },
+
     computedType: {
       get() {
         return this.type;
@@ -188,6 +223,22 @@ export default {
       },
       set(bool) {
         this.$emit('update:optional', bool);
+      },
+    },
+    computedUseAsColumn: {
+      get() {
+        return this.useAsColumn;
+      },
+      set(bool) {
+        this.$emit('update:useAsColumn', bool);
+      },
+    },
+    computedAlias: {
+      get() {
+        return this.alias;
+      },
+      set(value) {
+        this.$emit('update:alias', value);
       },
     },
   },

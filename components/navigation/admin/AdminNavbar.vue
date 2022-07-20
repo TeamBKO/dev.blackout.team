@@ -24,7 +24,7 @@
     </v-app-bar>
     <admin-nav-drawer
       v-model="showDrawer"
-      :links="links"
+      :links="computedLinks"
       :title.sync="title"
     ></admin-nav-drawer>
   </nav>
@@ -92,10 +92,20 @@ export default {
         {
           icon: 'mdi-clipboard-list',
           title: 'Rosters',
-          to: '/admin/rosters',
+
           scope: [
             this.$permissions.VIEW_ALL_ADMIN,
             this.$permissions.VIEW_ALL_FORMS,
+          ],
+          children: [
+            {
+              title: 'List',
+              to: '/admin/rosters',
+            },
+            {
+              title: 'Forms',
+              to: '/admin/rosters/forms',
+            },
           ],
         },
         {
@@ -150,6 +160,27 @@ export default {
   computed: {
     title() {
       return this.$store.getters[page.getters.TITLE];
+    },
+    computedLinks() {
+      return this.links.reduce((arr, item) => {
+        const { scope } = item;
+        if (scope && this.$auth.loggedIn && !this.$auth.hasScope(scope)) {
+          return arr;
+        }
+        arr.push(item);
+        return arr;
+
+        // if (conditions) {
+        //   const isTruthy = conditions.some((condition) => {
+        //     if (condition === 'loggedIn') {
+        //       return this.$auth.loggedIn;
+        //     }
+        //   });
+        //   if (!isTruthy) return arr;
+        // }
+        // arr.push(item);
+        // return arr;
+      }, []);
     },
   },
 };

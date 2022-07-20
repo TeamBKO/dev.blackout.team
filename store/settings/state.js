@@ -185,6 +185,56 @@ const state = () => ({
     description: 'Set the prefix the bot uses for commands.',
     value: '!',
   },
+  cacheTTL: {
+    type: 'integer',
+    group: 'cache',
+    title: 'Cache TTL',
+    description:
+      'Sets how long items should be cached in memory before expiring in seconds.',
+    value: 120,
+  },
+  cacheUsersOnFetch: {
+    type: 'boolean',
+    group: 'cache',
+    title: 'Cache users on fetch',
+    description: 'Enable/Disable caching on users all fetch',
+    value: true,
+  },
+  cacheRolessOnFetch: {
+    type: 'boolean',
+    group: 'cache',
+    title: 'Cache roles on fetch',
+    description: 'Enable/Disable caching on roles all fetch',
+    value: true,
+  },
+  cacheFormsOnFetch: {
+    type: 'boolean',
+    group: 'cache',
+    title: 'Cache forms on fetch',
+    description: 'Enable/Disable caching on forms all fetch',
+    value: true,
+  },
+  cacheCategoriesOnFetch: {
+    type: 'boolean',
+    group: 'cache',
+    title: 'Cache categories on fetch',
+    description: 'Enable/Disable caching on categories all fetch',
+    value: true,
+  },
+  cacheTagsOnFetch: {
+    type: 'boolean',
+    group: 'cache',
+    title: 'Cache tags on fetch',
+    description: 'Enable/Disable caching on tags all fetch',
+    value: true,
+  },
+  cacheRostersOnFetch: {
+    type: 'boolean',
+    group: 'cache',
+    title: 'Cache rosters on fetch',
+    description: 'Enable/Disable caching on rosters all fetch',
+    value: true,
+  },
 });
 
 export default state;

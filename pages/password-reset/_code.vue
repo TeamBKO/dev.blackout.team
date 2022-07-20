@@ -8,26 +8,6 @@
           <v-form v-model="valid">
             <v-container>
               <v-row align="center" justify="center" class="my-4">
-                <!-- <v-alert border="left" :type="alertType">
-                  <v-list>
-                    <v-list-item
-                      v-for="(criteria, idx) in passwordCriteria"
-                      :key="idx"
-                    >
-                      <v-list-item-icon>
-                        <v-icon
-                          :color="criteria.color"
-                          v-text="criteria.icon"
-                        ></v-icon>
-                      </v-list-item-icon>
-                      <v-list-item-content>
-                        <v-list-item-subtitle class="text-left">{{
-                          criteria.text
-                        }}</v-list-item-subtitle>
-                      </v-list-item-content>
-                    </v-list-item>
-                  </v-list>
-                </v-alert> -->
                 <password-criteria
                   v-model="passCriteria"
                   :input="newPassword"
@@ -35,7 +15,17 @@
               </v-row>
               <v-row>
                 <v-col cols="12">
-                  <v-text-field
+                  <form-field
+                    v-model="newPassword"
+                    filled
+                    :field="{ type: 'password', label: 'Enter new password' }"
+                    :rules="[
+                      isRequired('Password'),
+                      compare,
+                      isValidPassword('Password'),
+                    ]"
+                  ></form-field>
+                  <!-- <v-text-field
                     label="Enter new password"
                     v-model="newPassword"
                     :rules="[
@@ -44,10 +34,20 @@
                       isValidPassword('Password'),
                     ]"
                     filled
-                  ></v-text-field>
+                  ></v-text-field> -->
                 </v-col>
                 <v-col cols="12">
-                  <v-text-field
+                  <form-field
+                    v-model="confirmNewPassword"
+                    filled
+                    :field="{ type: 'password', label: 'Confirm new password' }"
+                    :rules="[
+                      isRequired('Password'),
+                      compare,
+                      isValidPassword('Password'),
+                    ]"
+                  ></form-field>
+                  <!-- <v-text-field
                     label="Confirm new password"
                     v-model="confirmNewPassword"
                     :rules="[
@@ -56,7 +56,7 @@
                       isValidPassword('Password'),
                     ]"
                     filled
-                  ></v-text-field>
+                  ></v-text-field> -->
                 </v-col>
               </v-row>
               <v-col cols="12">
@@ -69,9 +69,12 @@
             </v-container>
           </v-form>
         </template>
-        <template v-else>
+        <template v-else-if="status === 1">
           <p class="text-h5">{{ message }}</p>
           <p v-if="success">You will be redirected in {{ count }} seconds...</p>
+        </template>
+        <template v-else>
+          <p class="text-h">{{ message }}</p>
         </template>
         <v-overlay absolute v-model="isSending">
           <v-progress-circular indeterminate size="64"></v-progress-circular>
@@ -84,6 +87,7 @@
 <script>
 import validators from '~/utilities/validators.js';
 import PasswordCriteria from '~/components/auth/PasswordCriteria.vue';
+import FormField from '~/components/form/FormField.vue';
 
 const { isRequired, isValidPassword } = validators;
 
@@ -92,7 +96,7 @@ export default {
 
   layout: 'default',
 
-  components: { PasswordCriteria },
+  components: { PasswordCriteria, FormField },
 
   middleware: [
     ({ query, params, redirect }) => {
@@ -110,8 +114,6 @@ export default {
 
       return {
         status: resp.status,
-        newPassword: resp.password,
-        confirmNewPassword: resp.password,
         message: resp.message,
       };
     } catch (err) {
@@ -158,7 +160,7 @@ export default {
 
       try {
         const resp = (
-          await this.$axios.patch('/users/update-password', {
+          await this.$axios.patch('/users/update/loggedout/password', {
             id,
             code,
             password,
@@ -168,11 +170,13 @@ export default {
         this.message = resp.message;
         this.success = resp.success;
         this.status = resp.status;
+        this.newPassword = '';
+        this.confirmNewPassword = '';
         this.timer = setInterval(() => {
           if (!this.count) {
             clearInterval(this.timer);
             this.timer = null;
-            this.$router.replace('index');
+            this.$router.replace('/');
           }
           this.count--;
         }, 1000);

@@ -38,7 +38,7 @@
         <v-col cols="12">
           <v-data-table
             id="users"
-            show-select
+            :show-select="canDeleteAll"
             class="elevation-1"
             v-model="selectedItems"
             hide-default-footer

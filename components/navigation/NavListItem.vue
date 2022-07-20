@@ -1,5 +1,5 @@
 <template>
-  <v-list-item :nuxt="nuxt" :to="item.to" v-if="!hasChildren && isVisible">
+  <v-list-item :nuxt="nuxt" :to="item.to" v-if="!hasChildren">
     <v-list-item-icon v-if="item.icon">
       <v-icon>{{ item.icon }}</v-icon>
     </v-list-item-icon>
@@ -11,7 +11,7 @@
   <v-list-group
     no-action
     v-model="open"
-    v-else-if="isVisible"
+    v-else
     exact-active-class="primary"
     :prepend-icon="item.icon"
   >

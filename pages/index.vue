@@ -1,13 +1,5 @@
 <template>
   <section id="home">
-    <!-- <video-banner
-      playsinline
-      autoplay
-      muted
-      loop
-      :src="settings.frontPageVideoUrl.value"
-      v-if="showVideoOnMobile || showVideo"
-    /> -->
     <video-header
       :src="settings.frontPageVideoUrl.value"
       v-if="showVideoOnMobile || showVideo"
@@ -19,15 +11,14 @@
       </info-block>
       <info-block :data="blocks[2]" :idx="2">
         <div class="side-image">
-          <video
-            autoplay
-            loop
-            src="https://blackout-gaming.s3.amazonaws.com/video/shorts/boomer.webm"
-          ></video>
+          <img
+            src="https://lobucket.s3.ca-central-1.amazonaws.com/images/content.webp"
+            alt=""
+          />
         </div>
       </info-block>
     </v-container>
-    <testimonies :items="testimonies" v-if="settings.showTestimonies.value" />
+    <testimonies v-if="settings.showTestimonies.value" />
     <v-container fluid fill-height class="pa-0">
       <v-carousel
         v-model="model"
@@ -56,18 +47,13 @@ import CarouselItem from '~/components/frontpage/CarouselItem.vue';
 import MonolithBlock from '~/components/frontpage/Monoliths.vue';
 import VideoBanner from '~/components/frontpage/FPVideoBanner.vue';
 import VideoHeader from '~/components/frontpage/FPVideoHeader.vue';
-import Testimonies from '~/components/frontpage/FPTestimonies.vue';
+import Testimonies from '~/components/frontpage/TestimonyCarousel.vue';
 
 import settings from '~/constants/settings/public.js';
 
 export default {
   name: 'Home',
   layout: 'default',
-
-  // transition: {
-  //   name: 'fade',
-  //   mode: 'in-out',
-  // },
 
   components: {
     InfoBlock,
@@ -77,31 +63,6 @@ export default {
     CarouselItem,
     Testimonies,
   },
-
-  // async asyncData({ $auth, $toast, $axios, redirect, query }) {
-  //   if (!$auth.loggedIn) {
-  //     if (query.code && query.state) {
-  //       try {
-  //         const resp = (
-  //           await $axios.post('/auth/discord', {
-  //             code: query.code,
-  //             state: query.state,
-  //           })
-  //         ).data;
-
-  //         console.log(resp);
-
-  //         $auth.setUserToken(resp.access_token, resp.refresh_token);
-  //         $auth.setUser(resp.user);
-
-  //         history.pushState(null, '', location.href.split('?')[0]);
-  //       } catch (err) {
-  //         console.log(err);
-  //         $toast.error(err.response.data.message, { position: 'top-center' });
-  //       }
-  //     }
-  //   }
-  // },
 
   head() {
     return { title: 'Blackout Gaming Community' };

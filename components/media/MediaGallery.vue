@@ -7,6 +7,7 @@
             group
             tag="div"
             class="row"
+            style="padding: 5px 0"
             v-if="media && media.length"
           >
             <media-item
@@ -20,6 +21,16 @@
               :key="item.id + '_' + idx"
             ></media-item>
           </v-scale-transition>
+          <v-row class="fill-height" align="center" justify="center" v-else>
+            <div class="no-images">
+              <div class="text-center">
+                <v-icon :size="size" v-text="icon"></v-icon>
+                <p class="text-h4 grey--text font-weight-medium">
+                  No images found.
+                </p>
+              </div>
+            </div>
+          </v-row>
         </template>
         <template v-else-if="viewInTable">
           <media-table
@@ -29,16 +40,7 @@
             :disableSelect="disableSelect"
           ></media-table>
         </template>
-        <v-row class="fill-height" align="center" justify="center" v-else>
-          <div class="no-images">
-            <div class="text-center">
-              <v-icon :size="size" v-text="icon"></v-icon>
-              <p class="text-h4 grey--text font-weight-medium">
-                No images found.
-              </p>
-            </div>
-          </div>
-        </v-row>
+
         <v-row align="center" justify="center">
           <div
             class="d-flex justify-center align-center py-2"
@@ -105,6 +107,7 @@ export default {
     },
     newlyAdded: {
       type: Array,
+      default: () => [],
     },
   },
 
@@ -114,7 +117,6 @@ export default {
       refreshIcon: 'mdi-refresh',
       removeIcon: 'mdi-close',
       size: 120,
-      // identifier: nanoid(),
       nextCursor: '',
       prevCursor: '',
       hasMore: true,
@@ -195,7 +197,7 @@ export default {
         Object.assign(params, { nextCursor: this.nextCursor });
       }
 
-      if (this.newlyAdded && this.newlyAdded.length) {
+      if (this.newlyAdded?.length) {
         Object.assign(params, { exclude: this.newlyAdded.map(({ id }) => id) });
       }
 

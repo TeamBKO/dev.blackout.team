@@ -15,7 +15,7 @@ export default function replaceStr(str, obj) {
 
     result = match.reduce((_str, exp) => {
       const key = exp.slice(exp.indexOf('%') + 1, exp.lastIndexOf('%'));
-      console.log(obj[key]);
+
       if (obj[key]) {
         _str = _str.replace(/(%)\w+\1/i, obj[key]);
       }

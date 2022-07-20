@@ -14,7 +14,10 @@
         </v-btn>
       </v-toolbar>
       <v-toolbar prominent :src="banner" v-else>
-        <div class="d-flex align-center justify-center flex-grow-1 inherit">
+        <div
+          class="d-flex align-center justify-center flex-grow-1 inherit"
+          :style="{ height: '100%' }"
+        >
           <v-text-field v-model="name" label="Roster" readonly></v-text-field>
         </div>
         <v-btn x-small icon @click="computedOpen = false">
@@ -67,7 +70,7 @@ import RosterForm from './RosterForm.vue';
 import UserAvatar from '~/components/avatar/ListAvatar.vue';
 
 export default {
-  name: 'RosterApplyFormDialog',
+  name: 'RosterMemberFormDialog',
 
   components: { RosterForm, UserAvatar },
 
@@ -174,9 +177,14 @@ export default {
       let params = { fields: this.fields, roster_id: this.rosterID };
 
       if (this.member?.id) {
+        /** The member doesn't have a form */
         if (!this.formID) {
           url = '/forms';
           Object.assign(params, {
+            fields: this.fields.map((field) => {
+              const { id, ...f } = field;
+              return Object.assign(f, { field_id: id });
+            }),
             member_id: this.member.id,
             form_id: this.selectedForm.form_id,
           });
@@ -186,9 +194,12 @@ export default {
       try {
         const response = await this.$axios.$put(url, params);
         this.computedOpen = false;
-        this.$toast.success(`Updated form for member: ${member.username}`, {
-          position: 'top-center',
-        });
+        this.$toast.success(
+          `Updated form for member: ${response.member.username}`,
+          {
+            position: 'top-center',
+          }
+        );
         this.$emit('onUpdate', response);
       } catch (err) {
         this.$toast.error(err.response.data.message, {

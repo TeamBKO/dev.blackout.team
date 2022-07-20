@@ -110,7 +110,6 @@ export const mapActionsToStore = function mapActionsToStore(
       if (!obj[namespace.actions[name]]) {
         if (namespace.actions[name]) {
           if (optionsObject[name]?.options) {
-            // const options = Object.values(optionsObject[name].options);
             const options = optionsObject[name].options;
             obj[namespace.actions[name]] = action.execute(namespace, options);
           } else {

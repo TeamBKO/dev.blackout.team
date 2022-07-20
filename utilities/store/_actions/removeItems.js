@@ -23,7 +23,7 @@ export const REMOVE_ITEMS = function (namespace, options) {
         success = `Removed items with the following ids: ${ids}`;
       } else {
         if (options.successMessage) {
-          success = replaceStr(options.successMessage, item[0]);
+          success = replaceStr(options.successMessage, items[0]);
         }
       }
 

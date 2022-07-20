@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="computedOpen" fullscreen>
+  <v-dialog v-model="computedOpen" max-width="900">
     <template #activator="items" v-if="$scopedSlots.activator">
       <slot name="activator" v-bind="items" />
     </template>
@@ -18,13 +18,21 @@
       <v-card-text>
         <v-container>
           <v-row>
-            <v-col cols="12" v-if="permissions.can_edit_member_ranks">
+            <v-col
+              cols="12"
+              v-if="
+                permissions.can_edit_member_ranks &&
+                member.rank &&
+                priority <= member.rank.priority
+              "
+            >
               <roster-rank-selector
                 v-model="selectedRank"
                 :id="id"
                 :priority="priority"
               ></roster-rank-selector>
             </v-col>
+
             <v-col cols="12">
               <roster-permissions
                 v-model="member.permissions"
@@ -78,7 +86,7 @@ export default {
       type: Object,
       default: () => {},
     },
-    id: {
+    rosterID: {
       type: String,
     },
     priority: {
@@ -137,8 +145,8 @@ export default {
       if (isDiff) {
         Object.assign(member, {
           permissions: {
-            id: this.permissions.id,
-            ...Object.keys(selectedPermissions).reduce((obj, key) => {
+            id: this.member.permissions.id,
+            ...Object.keys(this.selectedPermissions).reduce((obj, key) => {
               if (
                 this.selectedPermissions[key] !== this.member.permissions[key]
               ) {
@@ -160,10 +168,14 @@ export default {
       const params = {};
 
       if (!this.ranks?.length) {
-        Object.assign(params, {
-          getRanks: true,
-          roster_id: this.id,
+        this.$store.dispatch(RANKS.actions.FETCH, {
+          url: `/rosters/${this.id}/ranks`,
+          loading: false,
         });
+        // Object.assign(params, {
+        //   getRanks: true,
+        //   roster_id: this.id,
+        // });
       }
 
       try {
@@ -173,8 +185,6 @@ export default {
             params,
           }
         );
-
-        console.log(member);
 
         if (member) {
           const { username, avatar, ...m } = member;
@@ -227,6 +237,10 @@ export default {
         this.open = true;
         this.$emit('input', value);
       },
+    },
+
+    ranks() {
+      return this.$store.getters[RANKS.getters.ITEMS];
     },
   },
 };

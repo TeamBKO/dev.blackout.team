@@ -72,11 +72,6 @@
         </v-btn> -->
       </template>
     </v-toolbar>
-    <media-user-sharing-dialog
-      v-if="allowUsersToShareMedia"
-      v-model="openShareDialog"
-      ref="shareDialog"
-    ></media-user-sharing-dialog>
     <v-card-text class="fill-height">
       <v-tabs-items v-model="tab">
         <media-upload
@@ -114,7 +109,6 @@
 <script>
 import SETTINGS from '~/constants/settings/public.js';
 
-import MediaUserSharingDialog from './MediaUserSharingDialog.vue';
 import MediaGallery from './MediaGallery.vue';
 import MediaUpload from './MediaUpload.vue';
 import DeleteDialog from '~/components/dialogs/DeleteDialog.vue';
@@ -128,7 +122,6 @@ export default {
     MediaGallery,
     MediaUpload,
     DeleteDialog,
-    MediaUserSharingDialog,
   },
 
   mixins: [mediaProps],
@@ -305,12 +298,15 @@ export default {
       this.upload.forEach(({ image }) =>
         formData.append(this.uploadKey, image)
       );
+
       this.isSending = true;
 
       try {
-        const items = (
-          await this.$axios.post(this.uploadEndpoint, formData, config)
-        ).data;
+        const items = await this.$axios.$post(
+          this.uploadEndpoint,
+          formData,
+          config
+        );
 
         if (items && items.length) {
           this.gallery.unshift(...items);
@@ -336,12 +332,6 @@ export default {
   },
 
   computed: {
-    allowUsersToShareMedia() {
-      return this.$store.getters[SETTINGS.getters.SETTINGS_VALUES](
-        'enableAccountMediaSharing'
-      );
-    },
-
     canUpload() {
       return (
         this.$auth.loggedIn &&

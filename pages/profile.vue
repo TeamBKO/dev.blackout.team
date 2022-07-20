@@ -92,67 +92,10 @@
                         :field="input.info"
                         :readonly="input.readOnly ? input.readOnly : false"
                         :rules="input.validators"
+                        :edit="input.edit ? input.edit : false"
                         filled
                       ></form-field>
                     </v-col>
-                  </v-row>
-                  <v-row v-if="isPersonal && enableSocialAuthentication">
-                    <v-col cols="12">
-                      <v-card-title style="padding: 0px"
-                        >Social Accounts</v-card-title
-                      >
-                      <v-divider></v-divider>
-                    </v-col>
-                    <v-col cols="12">
-                      <v-list>
-                        <v-list-item class="px-0" two-lines v-if="info.local">
-                          <v-list-item-content>
-                            <v-list-item-title>Discord</v-list-item-title>
-                            <v-list-item-subtitle
-                              >Linking your account to discord grants you the
-                              ability to log in using discord
-                              credentials.</v-list-item-subtitle
-                            >
-                          </v-list-item-content>
-                          <v-list-item-action>
-                            <v-btn
-                              :color="'#7289da'"
-                              @click="manageDiscordAccount"
-                            >
-                              <v-icon left>mdi-discord</v-icon>
-                              <span>{{ discordButtonText }}</span>
-                            </v-btn>
-                          </v-list-item-action>
-                        </v-list-item>
-                        <v-list-item class="px-0">
-                          <v-spacer></v-spacer>
-                          <v-list-item-action>
-                            <delete-self-button>
-                              <template #activator="{ on }">
-                                <v-btn text color="error" v-on="on"
-                                  ><v-icon left>mdi-trash-can-outline</v-icon
-                                  ><span>Delete Account</span></v-btn
-                                >
-                              </template>
-                            </delete-self-button>
-                          </v-list-item-action>
-                        </v-list-item>
-                      </v-list>
-                    </v-col>
-                    <!-- <v-col cols="12" v-if="info.local">
-                      <v-btn
-                        block
-                        large
-                        :color="'#7289da'"
-                        @click="manageDiscordAccount"
-                      >
-                        <v-icon left>mdi-discord</v-icon>
-                        <span>{{ discordButtonText }}</span>
-                      </v-btn>
-                    </v-col>
-                    <v-col cols="12" v-if="allowUserToDeleteAccount">
-                      <delete-self-button></delete-self-button>
-                    </v-col> -->
                   </v-row>
                 </v-form>
               </v-card-text>
@@ -175,6 +118,71 @@
                 ></update-email-dialog>
                 <v-btn text @click="reset">Reset</v-btn>
               </v-card-actions>
+            </v-card>
+            <v-card flat>
+              <v-card-title>Security</v-card-title>
+              <v-card-text>
+                <v-list>
+                  <v-list-item class="px-0" two-line>
+                    <v-list-item-content>
+                      <v-list-item-title>Edit Email</v-list-item-title>
+                      <v-list-item-subtitle
+                        ><i>{{
+                          inputFields.contact.email.value
+                        }}</i></v-list-item-subtitle
+                      >
+                    </v-list-item-content>
+                    <v-list-action><v-btn text>send code</v-btn></v-list-action>
+                  </v-list-item>
+                  <v-list-item class="px-0" two-line>
+                    <v-list-item-content>
+                      <v-list-item-title>Edit Password</v-list-item-title>
+                      <v-list-item-subtitle
+                        >Dispatches an email with a verification
+                        code.</v-list-item-subtitle
+                      >
+                    </v-list-item-content>
+                    <v-list-action><v-btn text>send code</v-btn></v-list-action>
+                  </v-list-item>
+                </v-list>
+              </v-card-text>
+            </v-card>
+            <v-card flat>
+              <v-card-title>Social</v-card-title>
+              <v-card-text>
+                <v-list>
+                  <v-list-item class="px-0" two-line v-if="info.local">
+                    <v-list-item-content>
+                      <v-list-item-title>Discord</v-list-item-title>
+                      <v-list-item-subtitle
+                        >Linking your account to discord grants you the ability
+                        to log in using discord
+                        credentials</v-list-item-subtitle
+                      >
+                    </v-list-item-content>
+                    <v-list-item-action>
+                      <v-btn :color="'#7289da'" @click="manageDiscordAccount">
+                        <v-icon left>mdi-discord</v-icon>
+                        <span>{{ discordButtonText }}</span>
+                      </v-btn>
+                    </v-list-item-action>
+                  </v-list-item>
+                  <v-list-item class="px-0" two-line v-if="info.local">
+                    <v-spacer></v-spacer>
+
+                    <v-list-item-action>
+                      <delete-self-button>
+                        <template #activator="{ on }">
+                          <v-btn text color="error" v-on="on"
+                            ><v-icon left>mdi-trash-can-outline</v-icon
+                            ><span>Delete Account</span></v-btn
+                          >
+                        </template>
+                      </delete-self-button>
+                    </v-list-item-action>
+                  </v-list-item>
+                </v-list>
+              </v-card-text>
             </v-card>
           </v-tab-item>
         </v-tabs>
@@ -465,37 +473,38 @@ export default {
               md: 6,
             },
             validators: [isRequired('Email'), isEmail('Email')],
+            edit: true,
           },
-          confirmEmail: {
-            info: {
-              label: 'Confirm Email',
-              type: 'text',
-            },
-            value: '',
-            columns: {
-              md: 6,
-            },
-            validators: [
-              isEmail('Confirm email'),
+          // confirmEmail: {
+          //   info: {
+          //     label: 'Confirm Email',
+          //     type: 'text',
+          //   },
+          //   value: '',
+          //   columns: {
+          //     md: 6,
+          //   },
+          //   validators: [
+          //     isEmail('Confirm email'),
 
-              (v) =>
-                (v && v === this.inputFields.contact.email.value) ||
-                `Fields must match.`,
-            ],
-          },
-          password: {
-            info: {
-              label: 'Enter password',
-              type: 'textfield',
-              subType: 'password',
-            },
-            // show: false,
-            value: '',
-            columns: {
-              md: 6,
-            },
-            validators: [isRequired('Old password')],
-          },
+          //     (v) =>
+          //       (v && v === this.inputFields.contact.email.value) ||
+          //       `Fields must match.`,
+          //   ],
+          // },
+          // password: {
+          //   info: {
+          //     label: 'Enter password',
+          //     type: 'textfield',
+          //     subType: 'password',
+          //   },
+          //   // show: false,
+          //   value: '',
+          //   columns: {
+          //     md: 6,
+          //   },
+          //   validators: [isRequired('Old password')],
+          // },
         },
         security: {
           password: {

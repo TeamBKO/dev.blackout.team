@@ -1,6 +1,10 @@
 <template>
   <v-col :md="columnSizes.md" :sm="columnSizes.sm">
-    <v-item #default="{ active, toggle }" :value="item.url">
+    <v-item
+      #default="{ active, toggle }"
+      :value="item.url"
+      style="overflow: visible"
+    >
       <v-img
         :class="{ 'is-selected': active }"
         :src="item.url"
@@ -16,19 +20,11 @@
           v-if="showOptions"
         >
           <template #activator="{ on }">
-            <v-btn fab small top right absolute v-on="on" color="grey">
+            <v-btn fab x-small top right absolute v-on="on" color="grey">
               <v-icon>mdi-dots-vertical</v-icon>
             </v-btn>
           </template>
           <v-list dense>
-            <v-list-item v-if="canShare" @click="$emit('share')" role="button">
-              <v-list-item-content>
-                <v-list-item-title>Share</v-list-item-title>
-              </v-list-item-content>
-              <v-list-item-icon>
-                <v-icon>mdi-share</v-icon>
-              </v-list-item-icon>
-            </v-list-item>
             <v-list-item @click="copyToClipboard(item.url)" role="button">
               <v-list-item-content>
                 <v-list-item-title>Get Link</v-list-item-title>
@@ -108,12 +104,6 @@ export default {
   },
 
   computed: {
-    allowUsersToShareMedia() {
-      return this.$store.getters[SETTINGS.getters.SETTINGS_VALUES](
-        'enableAccountMediaSharing'
-      );
-    },
-
     showOptions() {
       return this.canShare || this.canDelete;
     },
@@ -139,10 +129,6 @@ export default {
         this.$auth.loggedIn &&
         ((this.isOwner && this.canDeleteOwn) || this.canDeleteAll)
       );
-    },
-
-    canShare() {
-      return this.isOwner && this.allowUsersToShareMedia;
     },
 
     computedSelectedForDeletion: {

@@ -35,7 +35,7 @@
       <v-col cols="12">
         <v-data-table
           class="elevation-1"
-          show-select
+          :show-select="canDeleteAll"
           v-model="selectedItems"
           hide-default-footer
           disable-pagination

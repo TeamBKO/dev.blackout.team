@@ -5,9 +5,13 @@
     </template>
     <v-card>
       <v-toolbar prominent :src="banner">
-        <div class="d-flex align-center justify-center flex-grow-1 inherit">
+        <div
+          class="d-flex flex-column align-center justify-center flex-grow-1 inherit"
+          :style="{ height: '100%' }"
+        >
           <v-text-field v-model="name" label="Roster" readonly></v-text-field>
         </div>
+
         <v-btn x-small icon @click="computedOpen = false">
           <v-icon>mdi-close</v-icon>
         </v-btn>

@@ -22,6 +22,14 @@
               {{ tab.name }}
             </v-tab>
             <v-spacer></v-spacer>
+            <roster-analytics :rosterID="rosterInfo.id">
+              <template #activator="{ on }">
+                <div class="v-tab" v-on="on">
+                  <v-icon left>mdi-chart-multiple</v-icon>
+                  <span>Analytics</span>
+                </div>
+              </template>
+            </roster-analytics>
             <roster-ranks-dialog
               v-if="hasPermissionsForRanks"
               :permissions="permissions"
@@ -65,8 +73,8 @@
               :isApplicantTab="isApplicantTab"
               :isMemberTab="isMemberTab"
               :isRejectedTab="isRejectedTab"
-              @approved="updateMemberStatus(null, $event)"
-              @rejected="updateMemberStatus(null, $event)"
+              @approved="updateMemberStatus(null, null, $event)"
+              @rejected="updateMemberStatus(null, null, $event)"
             >
               <template #activator="{ on }">
                 <div class="v-tab" v-on="on">
@@ -88,14 +96,42 @@
                 </v-list-item>
               </template>
               <template #bottom v-if="permissions.can_delete_roster">
-                <v-list-item @click="deleteRoster">
-                  <v-list-item-icon>
-                    <v-icon>mdi-trash-can-outline</v-icon>
-                  </v-list-item-icon>
-                  <v-list-item-content>
-                    <v-list-item-subtitle>Delete Roster</v-list-item-subtitle>
-                  </v-list-item-content>
-                </v-list-item>
+                <v-dialog
+                  v-model="openDeleteRosterPrompt"
+                  max-width="500"
+                  persistent
+                >
+                  <template #activator="{ on }">
+                    <v-list-item v-on="on">
+                      <v-list-item-icon>
+                        <v-icon>mdi-trash-can-outline</v-icon>
+                      </v-list-item-icon>
+                      <v-list-item-content>
+                        <v-list-item-subtitle
+                          >Delete Roster</v-list-item-subtitle
+                        >
+                      </v-list-item-content>
+                    </v-list-item>
+                  </template>
+                  <v-card>
+                    <v-card-title>Delete Roster</v-card-title>
+                    <v-card-text>
+                      <p>
+                        Do you wish to proceed with deleting the entire roster?
+                      </p>
+                      <strong>This is irrevesible.</strong>
+                    </v-card-text>
+                    <v-card-actions>
+                      <v-spacer></v-spacer>
+                      <v-btn text color="error" @click="deleteRoster"
+                        >Delete</v-btn
+                      >
+                      <v-btn text @click="openDeleteRosterPrompt = false"
+                        >Close</v-btn
+                      >
+                    </v-card-actions>
+                  </v-card>
+                </v-dialog>
               </template>
             </roster-actions>
           </v-tabs>
@@ -116,10 +152,10 @@
             <v-data-table
               v-model="selected"
               disable-pagination
-              :show-select="hasPermissionsForActions"
               hide-default-footer
+              :show-select="hasPermissionsForActions"
               :items="members[currentTab].items"
-              :headers="headers[currentTab]"
+              :headers="computedHeaders[currentTab]"
             >
               <template #item.username="{ item }">
                 <v-list-item class="px-0">
@@ -135,11 +171,14 @@
               </template>
               <template #item.rank="{ item }">
                 <roster-rank-field
-                  v-if="permissions.can_edit_member_ranks"
+                  v-if="
+                    permissions.can_edit_member_ranks &&
+                    currentMember.rank.priority <= item.rank.priority
+                  "
                   :value="item.rank"
                   :id="rosterInfo.id"
                   :priority="currentMember.rank.priority"
-                  @save="updateMemberRank(item.id, item.userID, $event)"
+                  @save="updateMemberRank(item.id, $event)"
                 ></roster-rank-field>
                 <v-list-item class="px-0" v-else>
                   <v-list-item-icon class="mr-3">
@@ -159,13 +198,12 @@
                 <div class="d-flex justify-end">
                   <roster-actions
                     :permissions="permissions"
-                    :item="item"
                     :isApplicantTab="isApplicantTab"
                     :isMemberTab="isMemberTab"
                     :isRejectedTab="isRejectedTab"
                     :isDeletable="item.is_deletable"
-                    @approved="updateMemberStatus(item.id, $event)"
-                    @rejected="updateMemberStatus(item.id, $event)"
+                    @approved="updateMemberStatus(item.id, item.userID, $event)"
+                    @rejected="updateMemberStatus(item.id, item.userID, $event)"
                     @removed="$refs.deleteDialog.showDialog(item)"
                   >
                     <template #activator="{ on }">
@@ -201,7 +239,7 @@
                           currentMember.id === item.id &&
                           formID
                         "
-                        @onUpdate="updateFormIDForMember"
+                        @onUpdate="updateMemberThroughForm"
                         :formID="item.form ? item.form.id : null"
                         :rosterID="rosterInfo.id"
                         :member="item"
@@ -266,7 +304,8 @@
       ref="memberDialog"
       :permissions="permissions"
       :priority="currentMember.rank.priority"
-      @save="onMemberApply"
+      :rosterID="rosterInfo.id"
+      @save="updateMember"
     >
     </roster-member-dialog>
     <delete-dialog
@@ -318,6 +357,10 @@
 import pick from 'lodash/pick';
 import pickBy from 'lodash/pickBy';
 import isBoolean from 'lodash/isBoolean';
+import snakeCase from 'lodash/snakeCase';
+import startCase from 'lodash/startCase';
+import cloneDeep from 'lodash/cloneDeep';
+import RANKS from '~/constants/rosters/ranks/public.js';
 
 import UserAvatar from '~/components/avatar/ListAvatar.vue';
 import RosterActions from '~/components/rosters/RosterActions.vue';
@@ -328,13 +371,32 @@ import RosterApplicationDialog from '~/components/rosters/RosterApplyFormDialog.
 import RosterMemberFormDialog from '~/components/rosters/RosterMemberFormDialog.vue';
 import RosterRanksDialog from '~/components/rosters/RosterRanksDialog.vue';
 import RosterMemberDialog from '~/components/rosters/RosterMemberDialog.vue';
+import RosterAnalytics from '~/components/rosters/RosterAnalytics.vue';
 import DeleteDialog from '~/components/dialogs/DeleteDialog2.vue';
 import BreadCrumbs from '~/components/controls/BreadCrumbs.vue';
 
-const isTrue = (value) => value === true;
+import deleteRoster from './mixins/deleteRoster.js';
+import updateRoster from './mixins/updateRoster.js';
+import fetchRoster from './mixins/fetchRoster.js';
+import fetchMembers from './mixins/fetchMembers.js';
+import removeMember from './mixins/removeMember.js';
+import updateMember from './mixins/updateMember.js';
+import updateMemberRank from './mixins/updateMemberRank.js';
+import updateMemberStatus from './mixins/updateMemberStatus.js';
 
 export default {
   name: 'RosterContainer',
+
+  mixins: [
+    deleteRoster,
+    updateRoster,
+    fetchRoster,
+    fetchMembers,
+    removeMember,
+    updateMember,
+    updateMemberRank,
+    updateMemberStatus,
+  ],
 
   props: {
     hideBreadcrumbs: {
@@ -356,16 +418,52 @@ export default {
     RosterRanksDialog,
     RosterRankField,
     RosterMemberDialog,
+    RosterAnalytics,
     DeleteDialog,
     BreadCrumbs,
   },
 
   async mounted() {
     await this.fetchRoster();
+
+    // if (this.additionalColumns.length) {
+    //   this.headers = Object.entries(this.headers).reduce(
+    //     (obj, [key, header]) => {
+    //       obj[key] = header.splice(
+    //         1,
+    //         0,
+    //         ...this.additionalColumns.map((column) => ({
+    //           text: column.toUpperCase().replace('_', ' '),
+    //           sortable: false,
+    //           value: snakeCase(column),
+    //         }))
+    //       );
+    //       return obj;
+    //     },
+    //     {}
+    //   );
+    // }
     if (this.isPrivate) {
       document.documentElement.style.overflow = 'hidden';
     }
   },
+
+  // watch: {
+  //   additionalColumns(columns) {
+  //     if (columns.length) {
+  //       const headers = this.headers[this.currentTab];
+  //       headers.splice(
+  //         1,
+  //         0,
+  //         ...columns.map((column) => ({
+  //           text: column.toUpperCase().replace('_', ' '),
+  //           sortable: false,
+  //           value: snakeCase(column),
+  //         }))
+  //       );
+  //     }
+  //   },
+  // },
 
   data() {
     return {
@@ -379,15 +477,19 @@ export default {
         enable_recruitment: false,
         auto_approve: false,
         apply_roles_on_approval: false,
+        show_fields_as_columns: false,
         roles: [],
         roster_form: null,
       },
+
+      additionalColumns: [],
 
       openSettings: false,
       openMediaDialog: false,
       openRosterMemberForm: false,
       openMemberDialog: false,
       openDeleteDialog: false,
+      openDeleteRosterPrompt: false,
       disableApplyButton: false,
 
       currentMember: null,
@@ -495,6 +597,17 @@ export default {
   },
 
   methods: {
+    async getAnalytics() {
+      try {
+        const data = this.$axios.get(
+          `/rosters/analytics/${this.rosterInfo.id}`
+        );
+        console.log(data);
+      } catch (err) {
+        console.log(err);
+      }
+    },
+
     async onChange() {
       if (!this.computedMembers.length) {
         await this.fetchMembers();
@@ -513,80 +626,20 @@ export default {
         });
       }
     },
-    async deleteRoster() {
-      try {
-        const roster = await this.$axios.delete(
-          `/roster/${this.rosterInfo.id}`,
-          data
-        );
 
-        this.$toast.success(`Roster: ${roster.name} has been closed.`, {
-          position: 'top-center',
-        });
-        this.$router.redirect('/');
-      } catch (err) {
-        this.$toast.success(err.message, { position: 'top-center' });
-      }
-    },
-    async updateRoster(url) {
-      const data = {};
-      if (url !== this.banner) {
-        Object.assign(data, { banner: url });
-      }
+    updateMemberThroughForm({ formID, member }) {
+      console.log('member', member);
 
-      try {
-        const item = this.$axios.$patch(`/roster/${this.rosterInfo.id}`, data);
-
-        if (item) {
-          this.setRosterData(item);
-        }
-
-        this.$toast.success(`Saved changes.`, { position: 'top-center' });
-      } catch (err) {
-        this.$toast.success(err.message, { position: 'top-center' });
-      }
-    },
-    async updateMemberRank(id, { rank, previous }) {
-      try {
-        const item = await this.$axios.$patch(`/rosters/members/${id}`, {
-          rank_id: rank.id,
-        });
-
-        if (item) {
-          if (item.id === this.currentMember.id) {
-            const { permissions, ...rank } = item;
-            this.currentMember.rank = rank;
-            if (permissions) {
-              this.permissions = Object.assign(this.permissions, permissions);
-            }
-          }
-
-          const members = this.members[this.currentTab].items;
-          const member = members.find(({ id }) => id === item.id);
-          if (member) {
-            const rank = member.rank;
-            Object.assign(rank, item.rank);
-          }
-          const message = `Changed rank from ${previous.name} to ${member.rank.name} on ${item.username}`;
-          this.$toast.success(message, { position: 'top-center' });
-        }
-      } catch (err) {
-        console.log(err);
-        this.$toast.error(err.message, { position: 'top-center' });
-      }
-    },
-
-    updateFormIDForMember({ form, member }) {
       if (member?.id) {
         if (this.currentMember.id === member.id) {
-          this.formID = id;
+          this.formID = formID;
         }
         const match = this.members[this.currentTab].items.find(
           (m) => m.id === member.id
         );
 
         if (match) {
-          Object.assign(match, { form: { id: form } });
+          Object.assign(match, member);
         }
       }
     },
@@ -602,112 +655,21 @@ export default {
       }
     },
 
-    async removeMember(id) {
-      let payload = {};
-      let url = `/rosters/members/${id}`;
-      if (!id && this.selected.length) {
-        url = '/rosters/members';
-        if (this.selected.length === 1) {
-          url = `/rosters/members/${this.selected[0].id}`;
-        } else {
-          Object.assign(payload, {
-            [id ? 'id' : 'ids']: this.selected.reduce((arr, selected) => {
-              //if priority is 1, this is the owner and cannot be removed.
-              if (selected.rank.priority === 1) {
-                return arr;
-              }
-              arr.push(selected.id);
-              return arr;
-            }, []),
-          });
-        }
-      }
-
-      let request;
-      if (Object.keys(payload).length) {
-        request = this.$axios.$delete(url, payload);
-      } else {
-        request = this.$axios.$delete(url);
-      }
-
-      const members = await request;
-      const current = this.members[this.currentTab];
-      if (members) {
-        if (!Array.isArray(members)) {
-          const idx = current.items.findIndex(({ id }) => id === members.id);
-          if (idx !== -1) {
-            const member = current.items.splice(idx, 1)[0];
-            this.$toast.success(`Removed member: ${member.username}`, {
-              position: 'top-center',
-            });
-          }
-
-          return;
-        }
-        const membersToRemove = members.map(({ id }) => id);
-        current.items = current.items.filter(
-          ({ id }) => !membersToRemove.includes(id)
-        );
-        this.$toast.success('Removed members.', {
-          position: 'top-center',
-        });
-      }
+    setMemberData(arr) {
+      return arr.map((item) => {
+        const fields = item?.form?.fields?.length
+          ? item.form.fields.reduce((obj, field) => {
+              obj[snakeCase(field.alias)] = field.answer.value;
+              return obj;
+            }, {})
+          : {};
+        return Object.assign(item, fields);
+      });
     },
 
-    async updateMemberStatus(id, userID, status) {
-      const payload = { status };
-      let url = `/rosters/members/${id}`;
-
-      if (!this.selected?.length || this.selected?.length === 1) {
-        Object.assign(payload, { userID });
-      }
-
-      if (!id && this.selected.length) {
-        url = '/rosters/members';
-        if (this.selected.length === 1) {
-          url = `/rosters/members/${this.selected[0].id}`;
-        } else {
-          Object.assign(payload, {
-            members: this.selected.map(({ id, userID }) => ({ id, userID })),
-          });
-        }
-      }
-
-      try {
-        const members = await this.$axios.$patch(url, payload);
-        const currentTab = this.currentTab;
-        const current = this.members[currentTab];
-        if (members) {
-          if (Array.isArray(members)) {
-            const target = this.members[members[0].status];
-
-            target.exclude = members.map(({ id }) => id);
-            target.items.unshift(...members);
-            current.items = current.items.filter(
-              ({ id }) => !target.exclude.includes(id)
-            );
-          } else {
-            const target = this.members[members.status];
-            target.exclude.push(members.id);
-            const idx = current.items.findIndex(({ id }) => id === members.id);
-            if (idx !== -1) {
-              current.items.splice(idx, 1);
-              target.items.unshift(members);
-            }
-          }
-        }
-
-        this.$toast.success('Saved changes.', { position: 'top-center' });
-      } catch (err) {
-        console.log(err);
-        this.$toast.error(err.response.data.message, {
-          position: 'top-center',
-        });
-      }
-    },
     setPageInfo(items) {
       if (items && items.results.length) {
-        this.computedMembers = items.results;
+        this.computedMembers = this.setMemberData(items.results);
 
         if (items?.pageInfo?.hasMore) {
           this.hasMore = items.pageInfo.hasMore;
@@ -729,62 +691,12 @@ export default {
         }
       });
     },
-    async fetchRoster() {
-      try {
-        const { members, member, ranks, roster_form, ...roster } =
-          await this.$axios.$get(`/rosters/${this.$route.params.slug}`);
-
-        if (roster_form) {
-          this.formID = roster_form.id;
-        }
-
-        if (ranks?.length) {
-          this.ranks = ranks;
-        }
-
-        if (members?.results?.length) {
-          this.setPageInfo(members);
-        }
-
-        if (member) {
-          const { permissions, ...currentMember } = member;
-          this.currentMember = currentMember;
-          this.permissions = Object.assign(
-            this.permissions,
-            pickBy(currentMember.rank.permissions, isTrue),
-            pickBy(permissions, isTrue)
-          );
-        }
-
-        this.setRosterData(roster);
-      } catch (err) {
-        console.log(err);
-      }
-    },
-    async fetchMembers() {
-      const params = {
-        status: this.currentTab,
-        exclude: this.exclude,
-      };
-      this.loading = true;
-      try {
-        const items = await this.$axios.$get(
-          `/rosters/${this.rosterInfo.id}/members`,
-          { params }
-        );
-        this.setPageInfo(items);
-      } catch (err) {
-        console.log(err);
-        this.$toast.error(err.response.data.message, {
-          position: 'top-center',
-        });
-      } finally {
-        this.loading = false;
-      }
-    },
   },
 
   computed: {
+    applyRoles() {
+      return this.rosterInfo.apply_roles_on_approval;
+    },
     hasPermissionsForActions() {
       return this.permissions
         ? this.permissions.can_add_members ||
@@ -844,6 +756,24 @@ export default {
         },
       ];
     },
+    computedHeaders() {
+      if (this.rosterInfo.show_fields_as_columns) {
+        return Object.entries(this.headers).reduce((obj, [key, header]) => {
+          obj[key] = header.splice(
+            1,
+            0,
+            ...this.additionalColumns.map((column) => ({
+              text: column.toUpperCase().replace('_', ' '),
+              sortable: false,
+              value: snakeCase(column),
+            }))
+          );
+          obj[key] = header;
+          return obj;
+        }, {});
+      }
+      return this.headers;
+    },
     computedTabs() {
       return this.tabs.reduce((arr, tab) => {
         const { conditions } = tab;
@@ -867,11 +797,11 @@ export default {
     computedMembers: {
       get() {
         return this.members[this.currentTab].items.map((member) => {
-          // if (this.currentMember) {
-          //   member =
-          //     member.id === this.currentMember.id ? this.currentMember : member;
-          // }
-          member.rank = this.ranks.find((rank) => rank.id === member.rank.id);
+          member.form = { id: member.form.id };
+          member.rank = this.$store.getters[RANKS.getters.ITEMS].find(
+            (rank) => rank.id === member.rank.id
+          );
+
           return member;
         });
       },
@@ -921,10 +851,10 @@ export default {
     },
     exclude: {
       get() {
-        return this.members[this.currentTab].excluded;
+        return this.members[this.currentTab].exclude;
       },
       set(value) {
-        this.members[this.currentTab].excluded = value;
+        this.members[this.currentTab].exclude = value;
       },
     },
   },

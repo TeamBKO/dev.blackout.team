@@ -69,6 +69,9 @@
 
 <script>
 import setTitle from '~/middleware/setPageTitle.js';
+import formatPieChartData from '~/utilities/charts/formatPieChartData.js';
+import formatBarChartData from '~/utilities/charts/formatBarChartData.js';
+
 import ApexChart from 'vue-apexcharts';
 
 const generateChartData = function (chart, type = 'bar', chartId, labels) {

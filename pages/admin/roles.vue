@@ -6,7 +6,7 @@
         <v-col md="6" sm="12">
           <div class="d-flex align-center">
             <table-delete-dialog
-              v-model="open"
+              v-model="openDeleteDialog"
               v-if="canDeleteAll"
               @deleteAll="onDelete"
               @cancel="onCancel"
@@ -23,7 +23,7 @@
       <v-row>
         <v-col cols="12">
           <v-data-table
-            show-select
+            :show-select="canDeleteAll"
             class="elevation-1"
             v-model="selectedItems"
             hide-default-footer
@@ -129,9 +129,7 @@ export default {
         if (!$auth.hasScope(perms)) {
           redirect('/');
         }
-        if (!store.getters[ROLES.getters.ITEMS].length) {
-          store.dispatch(ROLES.actions.FETCH);
-        }
+        store.dispatch(ROLES.actions.FETCH);
       } else {
         redirect('/');
       }
@@ -146,8 +144,6 @@ export default {
 
       suffix: 'roles',
 
-      distance: 75,
-      isInitialLoad: true,
       policyList: {},
       discordRoleList: [],
 

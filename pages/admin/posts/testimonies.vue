@@ -6,7 +6,7 @@
     </v-row>
     <v-row>
       <v-col cols="12">
-        <post-table
+        <!-- <post-table
           v-model="selected"
           :items="testimonies"
           :headers="headers"
@@ -31,7 +31,32 @@
               @edit="onEdit(item, index)"
             ></table-actions>
           </template>
-        </post-table>
+        </post-table> -->
+        <v-data-table
+          v-model="selected"
+          :items="testimonies"
+          :headers="headers"
+        >
+          <template #item.author="{ item }">
+            <v-list-item class="px-0">
+              <v-list-item-avatar>
+                <user-avatar :nameKey="'author'" :item="item" :size="40" />
+              </v-list-item-avatar>
+              <v-list-item-content>
+                <v-list-item-title>
+                  {{ item.author }}
+                </v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </template>
+          <template #item.actions="{ item, index }">
+            <table-actions
+              :actions="actions"
+              :suffix="suffix"
+              @edit="onEdit(item, index)"
+            ></table-actions>
+          </template>
+        </v-data-table>
         <div
           class="d-flex justify-center align-center"
           v-intersect="onIntersect"
@@ -101,8 +126,16 @@ export default {
       minWidth: 500,
       selected: [],
       actions: [
-        { icon: 'mdi-pencil', scope: 'view', text: 'Edit' },
-        { icon: 'mdi-delete', scope: 'view', text: 'Remove' },
+        {
+          icon: 'mdi-pencil',
+          scope: $permissions.VIEW_ALL_ADMIN,
+          text: 'Edit',
+        },
+        {
+          icon: 'mdi-delete',
+          scope: $permissions.VIEW_ALL_ADMIN,
+          text: 'Remove',
+        },
       ],
       headers: [
         { text: 'ID', sortable: false, value: 'id' },
@@ -131,7 +164,6 @@ export default {
 
     onEdit(item, index) {
       this.selectedTestimoney = {
-        order: index,
         id: item.id,
         avatar: item.avatar,
         author: item.author,
@@ -155,7 +187,7 @@ export default {
       }
 
       try {
-        const items = await this.$axios.$get('/testimonies', { params });
+        const items = await this.$axios.$get('/admin/testimonies', { params });
         if (items && item.results && item.results.length) {
           if (item.pageInfo.next) {
             this.nextCursor = item.pageInfo.next;
@@ -172,14 +204,6 @@ export default {
         }
       } catch (err) {}
     },
-
-    // async saveOrderChange() {
-    //   await this.$axios.patch('/testimony/order', this.testimonyOrder);
-    //   this.$store.dispatch(snackbar.actions.TOGGLE_BAR, {
-    //     text: 'Updates saved.',
-    //     position: 'top',
-    //   });
-    // },
   },
 };
 </script>

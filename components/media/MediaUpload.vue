@@ -1,14 +1,15 @@
 <template>
   <v-tab-item>
     <v-container :fluid="!single" :class="containerClasses">
-      <v-row v-if="single" align="center" justify="center" :class="rowClasses">
-        <div
-          v-if="!media.length"
-          cols="12"
-          class="text-center"
-          @drop.prevent="addFile"
-          @dragover.prevent
-        >
+      <v-row
+        v-if="singleOrEmpty"
+        align="center"
+        justify="center"
+        :class="rowClasses"
+        @drop.prevent="addFile"
+        @dragover.prevent
+      >
+        <div v-if="!media.length" cols="12" class="text-center">
           <v-icon :size="size" v-text="icon"></v-icon>
           <p class="text-h4 grey--text font-weight-medium">
             Drag an image here
@@ -142,18 +143,6 @@ export default {
   methods: {
     checkFiles(files) {
       return new Promise((resolve, reject) => {
-        //   files.forEach((file) => {
-        //     const validFileExt = this.approvedExts.test(file.name);
-        //     const isImage = file.type.startsWith('image/');
-        //     const validFileSize = file.size <= this.fileSize;
-
-        //     if (!validFileExt) return reject('File extention is invalid.');
-        //     if (!isImage) return reject('File is not an image.');
-        //     if (!validFileSize) return reject('File is too large.');
-        //   });
-        //   resolve();
-        // });
-
         for (const file of files) {
           const validFileExt = this.approvedExts.test(file.name);
           const isImage = file.type.startsWith('image/');
@@ -167,7 +156,8 @@ export default {
             break;
           }
           if (!validFileSize) {
-            reject('File is too large.');
+            const sizeInKb = Math.floor(this.fileSize / 1024);
+            reject(`File is too large. Must be ${sizeInKb}kb in size or less.`);
             break;
           }
         }
@@ -207,17 +197,23 @@ export default {
   },
 
   computed: {
+    singleOrEmpty() {
+      return this.single || !this.media.length;
+    },
     progressBar() {
       return { height: this.uploadProgress + '%' };
     },
     containerClasses() {
-      return [{ 'no-image': this.single && !this.media.length }];
+      return [{ 'no-image': !this.media.length }];
     },
+    // containerClasses() {
+    //   return [{ 'no-image': this.single && !this.media.length || this.singleOrEmpty }];
+    // },
     rowClasses() {
-      return [{ 'fill-height': this.single }];
+      return [{ 'fill-height': this.singleOrEmpty }];
     },
     icon() {
-      return this.single ? 'mdi-image-multiple-outline' : 'mdi-plus';
+      return this.singleOrEmpty ? 'mdi-image-multiple-outline' : 'mdi-plus';
     },
   },
 };

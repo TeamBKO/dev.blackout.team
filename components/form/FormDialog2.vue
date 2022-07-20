@@ -223,7 +223,7 @@ export default {
     },
 
     isDisabled() {
-      return this.tab > 0 || !this.valid;
+      return this.tab > 0 || !this.validFields.length || !this.valid;
     },
 
     toAdd() {

@@ -14,6 +14,7 @@ import {
   VCheckbox,
   VMenu,
   VDatePicker,
+  VBtn,
 } from 'vuetify/lib';
 
 import CheckboxGroup from './FormCheckboxes.vue';
@@ -88,6 +89,7 @@ export default {
     VRadioGroup,
     VRadio,
     VMenu,
+    VBtn,
     VDatePicker,
     VCheckbox,
     CheckboxGroup,
@@ -109,6 +111,10 @@ export default {
     rules: {
       type: Array,
       default: () => [],
+    },
+    edit: {
+      type: Boolean,
+      default: false,
     },
   },
 
@@ -335,7 +341,7 @@ export default {
       return this.$createElement('v-select', { props, on });
     },
 
-    genInputField(input, _props) {
+    genInputField(input, isPassword = false, _props) {
       const props = Object.assign({}, _props, {
         rules: this.isOptional ? [] : [this.isRequired],
         value: this.computedValue,
@@ -352,7 +358,7 @@ export default {
 
       const on = { input: (v) => this.$emit('input', v) };
 
-      if (this.field.subType === 'password') {
+      if (this.field.subType === 'password' || isPassword) {
         Object.assign(props, {
           type: this.showPassword ? 'text' : 'password',
           appendIcon: this.showPassword ? 'mdi-eye' : 'mdi-eye-off',
@@ -364,7 +370,18 @@ export default {
         });
       }
 
-      return this.$createElement(input, { props, on }, []);
+      const options = { props, on };
+
+      if (this.edit) {
+        Object.assign(options.props, {
+          appendOuterIcon: 'mdi-square-edit-outline',
+        });
+        Object.assign(options.on, {
+          'click:append-outer': () => this.$emit('onEdit'),
+        });
+      }
+
+      return this.$createElement(input, options, []);
     },
 
     genField(props) {
@@ -376,11 +393,13 @@ export default {
         case 'select':
           return this.genSelect(props);
         case 'textarea':
-          return this.genInputField('v-textarea', props);
+          return this.genInputField('v-textarea', false, props);
+        case 'password':
+          return this.genInputField('v-text-field', true, props);
         case 'birthday':
           return this.genBirthday();
         default:
-          return this.genInputField('v-text-field', props);
+          return this.genInputField('v-text-field', false, props);
       }
     },
   },

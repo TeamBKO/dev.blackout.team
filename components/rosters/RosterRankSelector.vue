@@ -5,6 +5,7 @@
     :items="ranks"
     :loading="loading"
     :hasMore="hasMore"
+    :readOnly="readOnly"
     @cursor="getRanks"
   >
     <template #item="{ item, on, attrs }">
@@ -44,6 +45,10 @@ export default {
     },
     priority: {
       type: Number,
+    },
+    readOnly: {
+      type: Boolean,
+      default: false,
     },
   },
 

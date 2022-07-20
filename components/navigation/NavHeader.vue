@@ -114,8 +114,8 @@ export default {
       navUserMenuItems: [
         {
           icon: 'mdi-account-cog',
-          title: 'Profile',
-          to: `/profile`,
+          title: 'User Settings',
+          to: `/settings`,
         },
       ],
     };

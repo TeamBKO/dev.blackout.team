@@ -137,6 +137,23 @@
                   <v-col cols="12">
                     <v-list-item two-lines class="px-0">
                       <v-list-item-content>
+                        <v-list-item-title
+                          >Show form fields as columns</v-list-item-title
+                        >
+                        <v-list-item-subtitle>
+                          Show select form fields as additional table columns.
+                        </v-list-item-subtitle>
+                      </v-list-item-content>
+                      <v-list-item-action>
+                        <v-switch
+                          v-model="editable.show_fields_as_columns"
+                        ></v-switch>
+                      </v-list-item-action>
+                    </v-list-item>
+                  </v-col>
+                  <v-col cols="12">
+                    <v-list-item two-lines class="px-0">
+                      <v-list-item-content>
                         <v-list-item-title>
                           <span>Private</span>
                         </v-list-item-title>
@@ -222,6 +239,7 @@ const defaultProps = {
   apply_roles_on_approval: false,
   private: false,
   is_disabled: false,
+  show_fields_as_columns: false,
 
   selectedForm: 0,
   selectedRoles: [],
@@ -283,6 +301,7 @@ export default {
         apply_roles_on_approval: false,
         private: false,
         is_disabled: false,
+        show_fields_as_columns: false,
         selectedForm: 0,
         selectedRoles: [],
       },
@@ -307,6 +326,7 @@ export default {
         apply_roles_on_approval: false,
         private: false,
         is_disabled: false,
+        show_fields_as_columns: false,
         selectedForm: 0,
         selectedRoles: [],
       },

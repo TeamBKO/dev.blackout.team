@@ -1,7 +1,7 @@
 <template>
   <v-dialog persistent v-model="open" :width="width">
     <template #activator="{ on }">
-      <v-btn text v-on="on" :disabled="disabled">{{ label }}</v-btn>
+      <slot name="activator" v-bind="{ on }" />
     </template>
     <v-card>
       <v-card-title>
@@ -9,11 +9,33 @@
         <span>{{ title }}</span>
       </v-card-title>
       <v-card-text>
-        <p v-if="!awaitingConfirmation">
-          Changing your contact information is considered a security risk and
-          will require additional authorization through your current email
-          address.
-        </p>
+        <v-row v-if="!awaitingConfirmation">
+          <v-form v-model="valid">
+            <v-col cols="12">
+              <p>
+                Changing your contact information is considered a security risk
+                and will require additional authorization through your current
+                email address.
+              </p>
+            </v-col>
+            <v-col cols="12">
+              <!-- <v-text-field
+                type="password"
+                filled
+                v-model="password.value"
+                :label="password.label"
+                :rules="password.validators"
+              ></v-text-field> -->
+              <form-field
+                v-model="password.value"
+                filled
+                :rules="password.validators"
+                :field="{ type: 'password', label: 'Enter password' }"
+              ></form-field>
+            </v-col>
+          </v-form>
+        </v-row>
+
         <v-form v-model="valid" v-else>
           <p>An email has been dispatched with a code.</p>
           <v-text-field
@@ -28,9 +50,13 @@
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn text color="error" @click="makeUpdateRequest">{{
-          awaitingConfirmation ? 'Submit' : 'Send Code'
-        }}</v-btn>
+        <v-btn
+          text
+          color="error"
+          :disabled="!valid"
+          @click="makeUpdateRequest"
+          >{{ awaitingConfirmation ? 'Submit' : 'Send Code' }}</v-btn
+        >
         <v-btn text color="default" @click="cancel">Cancel</v-btn>
       </v-card-actions>
     </v-card>
@@ -42,28 +68,26 @@
 
 <script>
 import { isRequired, isEmail, minLength } from '~/utilities/validators';
+import FormField from '~/components/form/FormField.vue';
 
 export default {
   name: 'UpdateEmailDialog',
 
+  components: { FormField },
+
   props: {
     title: {
       type: String,
-      default: 'Update Email',
+      default: 'Edit Email',
     },
     label: {
       type: String,
       default: 'Submit',
     },
-    disabled: {
-      type: Boolean,
+    email: {
+      type: String,
       required: true,
-      default: true,
-    },
-    data: {
-      type: Object,
-      required: true,
-      default: () => {},
+      default: '',
     },
   },
 
@@ -74,9 +98,15 @@ export default {
       isSending: false,
       valid: false,
 
-      currentEmail: this.data.email.value || '',
+      currentEmail: this.email || '',
 
       width: 750,
+
+      password: {
+        label: 'Enter password',
+        value: '',
+        validators: [isRequired('Password')],
+      },
 
       inputFields: {
         code: {
@@ -112,7 +142,7 @@ export default {
   watch: {
     data(v) {
       if (v) {
-        this.currentEmail = this.data.email.value;
+        this.currentEmail = this.email;
       }
     },
   },
@@ -129,17 +159,16 @@ export default {
     async dispatchEmail() {
       this.isSending = true;
 
-      const email = this.data.email.value;
-      const password = this.data.password.value;
+      const password = this.password.value;
 
       try {
         const resp = (
-          await this.$axios.patch('/users/update/contact', { email, password })
+          await this.$axios.patch(`users/update/email`, { password })
         ).data;
 
         this.awaitingConfirmation = resp.awaitConfirmation;
       } catch (err) {
-        Promise.reject(err);
+        return Promise.reject(err);
       } finally {
         this.isSending = false;
       }

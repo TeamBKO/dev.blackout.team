@@ -3,7 +3,15 @@
     <v-container>
       <v-row>
         <v-col cols="12" md="12" sm="12">
-          <v-text-field v-model="computedName" label="Name"></v-text-field>
+          <v-text-field
+            v-model="computedName"
+            :rules="[
+              isRequired('Name'),
+              minLength('Name', 3),
+              maxLength('Name', 50),
+            ]"
+            label="Name"
+          ></v-text-field>
         </v-col>
         <v-col cols="12" md="12" sm="12">
           <v-textarea
@@ -29,6 +37,8 @@
           :field="field"
           :isDrag="drag"
           :type.sync="field.type"
+          :useAsColumn.sync="field.use_as_column"
+          :alias.sync="field.alias"
           :optional.sync="field.optional"
           :options.sync="field.options"
           @removeField="removeField"
@@ -49,6 +59,7 @@
 
 <script>
 import { nanoid } from 'nanoid';
+import { isRequired, minLength, maxLength } from '~/utilities/validators';
 import cloneDeep from 'lodash/cloneDeep';
 import FormFieldQuestion from './FormFieldQuestion.vue';
 import FormAddFieldButton from './FormAddFieldButton.vue';
@@ -113,12 +124,17 @@ export default {
   },
 
   methods: {
+    isRequired,
+    minLength,
+    maxLength,
     addField() {
       this.internalFields.push({
         _key: nanoid(),
         value: '',
         type: 'textfield',
         optional: true,
+        use_as_column: false,
+        alias: null,
         options: [],
       });
       this.fields = this.internalFields;
