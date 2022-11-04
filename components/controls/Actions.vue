@@ -12,22 +12,25 @@
           role="button"
           :key="idx"
           @click="$emit(action.label)"
-          v-if="!$scopedSlots[action.label]"
+          v-if="!$scopedSlots[`action.${action.label}`]"
         >
           <v-list-item-content>
             <v-list-item-title>
-              <v-icon left small v-text="action.icon"></v-icon>
               <span>{{ action.text }}</span>
             </v-list-item-title>
           </v-list-item-content>
+          <v-list-item-icon>
+            <v-icon left small v-text="action.icon"></v-icon>
+          </v-list-item-icon>
         </v-list-item>
         <slot
-          :name="action.label"
+          :name="`action.${action.label}`"
+          v-else
           v-bind="{
             text: action.text,
             icon: action.icon,
             label: action.label,
-            scope: action.scope,
+            scope: action.scope ? action.scope : null,
             isDeletable,
           }"
         />
@@ -46,9 +49,6 @@ export default {
       type: Array,
       default: () => [],
     },
-    suffix: {
-      type: String,
-    },
     isDeletable: {
       type: Boolean,
       default: false,
@@ -59,6 +59,24 @@ export default {
     return {
       open: false,
       icon: 'mdi-dots-veritcal',
+
+      defaultActions: [
+        {
+          icon: 'mdi-eye',
+          text: 'View',
+          label: 'view',
+        },
+        {
+          icon: 'mdi-pencil',
+          text: 'Edit',
+          label: 'edit',
+        },
+        {
+          icon: 'mdi-delete',
+          text: 'Remove',
+          label: 'remove',
+        },
+      ],
     };
   },
 
@@ -77,20 +95,32 @@ export default {
       //   }
       //   return output;
       // }, []);
-      return this.actions.reduce((arr, action) => {
-        if (this.$auth.hasScope(action.scope)) {
-          if (!this.isDeletable && /^delete:(all|own)/.test(action.scope)) {
-            return arr;
-          }
-          action.label = action.text.toLowerCase();
-          action.text =
-            action.text.charAt(0).toUpperCase() + action.text.slice(1);
+      return this.actions && this.actions.length
+        ? this.actions.reduce((arr, action) => {
+            if (this.$auth.hasScope(action.scope)) {
+              if (!this.isDeletable && /^delete:(all|own)/.test(action.scope)) {
+                return arr;
+              }
+              action.label = action.text.toLowerCase();
+              action.text =
+                action.text.charAt(0).toUpperCase() + action.text.slice(1);
 
-          arr.push(action);
-        }
-        return arr;
-      }, []);
+              arr.push(action);
+            }
+            return arr;
+          }, [])
+        : this.defaultActions;
     },
+
+    // canBeDeleted() {
+    //   return (
+    //     this.isDeletable &&
+    //     this.$auth.hasScope([
+    //       [this.$permissions.DELETE_ALL_FORMS],
+    //       [this.$permissions.DELETE_OWN_FORMS],
+    //     ])
+    //   );
+    // },
   },
 };
 </script>

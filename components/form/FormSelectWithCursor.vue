@@ -38,12 +38,15 @@
         </template>
       </div>
     </template>
+    <template #append-outer v-if="$scopedSlots.unset">
+      <slot name="unset" />
+    </template>
   </v-select>
 </template>
 
 <script>
 export default {
-  name: 'RosterFormSelect',
+  name: 'FormSelectWithCursor',
 
   props: {
     value: {
@@ -63,6 +66,7 @@ export default {
     },
     label: {
       type: String,
+      default: 'Select a form',
     },
   },
 

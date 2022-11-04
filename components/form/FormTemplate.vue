@@ -39,6 +39,7 @@
           :type.sync="field.type"
           :useAsColumn.sync="field.use_as_column"
           :alias.sync="field.alias"
+          :multiple.sync="field.multiple"
           :optional.sync="field.optional"
           :options.sync="field.options"
           @removeField="removeField"
@@ -134,6 +135,7 @@ export default {
         type: 'textfield',
         optional: true,
         use_as_column: false,
+        multiple: false,
         alias: null,
         options: [],
       });

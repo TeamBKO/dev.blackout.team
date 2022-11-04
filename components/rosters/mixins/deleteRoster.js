@@ -1,3 +1,4 @@
+import ROSTERS from '~/constants/rosters/public.js';
 export default {
   methods: {
     async deleteRoster() {
@@ -18,7 +19,7 @@ export default {
         this.$toast.success(`Roster: ${roster.name} has been closed.`, {
           position: 'top-center',
         });
-        this.$router.push('/');
+        this.$router.push('/rosters');
       } catch (err) {
         this.$toast.error(err.message, { position: 'top-center' });
       }

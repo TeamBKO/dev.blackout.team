@@ -17,15 +17,19 @@
       <roster-application-dialog
         v-if="roster.roster_form"
         :rosterID="roster.id"
+        :rosterSlug="roster.url"
       >
         <template #activator="{ on }">
           <v-btn v-on="on" :disabled="hasJoined">Apply</v-btn>
         </template>
       </roster-application-dialog>
-      <v-btn :disabled="!hasJoined" v-else>Join</v-btn>
+      <v-btn :disabled="hasJoined" @click="joinRoster(roster.id)" v-else
+        >Join</v-btn
+      >
       <v-btn
         class="mx-2"
         :disabled="viewButtonDisabled"
+        :data-button-id="roster.url"
         @click="$router.push(`/rosters/${roster.url}`)"
         >View</v-btn
       >
@@ -39,7 +43,9 @@
 </template>
 
 <script>
+import ROSTERS from '~/constants/rosters/public.js';
 import RosterApplicationDialog from '~/components/rosters/RosterApplyFormDialog.vue';
+import isBoolean from 'lodash/isBoolean';
 export default {
   name: 'RosterCard',
 
@@ -53,9 +59,35 @@ export default {
     },
   },
 
+  methods: {
+    async joinRoster(id) {
+      try {
+        const { roster } = await this.$axios.$post(`/rosters/${id}`);
+
+        if (roster) {
+          this.$store.commit(ROSTERS.mutations.UPDATE_ITEM, {
+            id: roster.id,
+            joined: !!parseInt(roster.joined, 10),
+            members: roster.members,
+          });
+        }
+
+        if (this.roster.auto_approve) {
+          return this.$toast.success(
+            `You've joined ${roster.name.toUpperCase()}.`
+          );
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    },
+  },
+
   computed: {
     hasJoined() {
-      return !!parseInt(this.roster.joined, 10);
+      return isBoolean(this.roster.joined)
+        ? this.roster.joined
+        : !!parseInt(this.roster.joined, 10);
     },
     viewButtonDisabled() {
       return this.roster.private && !this.hasJoined;

@@ -7,7 +7,7 @@
     :item-value="'id'"
   >
     <template #append-item>
-      <v-list-item v-if="computedValue" @click="computedValue = ''">
+      <v-list-item v-if="computedValue" @click="computedValue = 0">
         <v-list-item-content>
           <v-list-item-title>
             <v-icon left>mdi-close</v-icon>
@@ -32,12 +32,13 @@
 
 <script>
 import FORMS from '~/constants/forms/public.js';
+import uniqBy from 'lodash/uniqBy';
 export default {
   name: 'RosterFormSelect',
 
   props: {
     value: {
-      type: [String, Number],
+      type: [String, Number, Object],
     },
     items: {
       type: Array,
@@ -53,7 +54,7 @@ export default {
           loading: true,
         });
 
-        this.$emit('update:items', [...this.items, ...results]);
+        this.$emit('update:items', uniqBy([...this.items, ...results], 'id'));
       }
     },
   },

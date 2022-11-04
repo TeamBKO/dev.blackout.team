@@ -1,9 +1,5 @@
 <template>
-  <v-edit-dialog
-    large
-    @open="getInitRanks"
-    @save="$emit('save', { rank: selectedRank, previous: previousRank })"
-  >
+  <v-edit-dialog large @open="getInitRanks" @save="onSave">
     <v-list-item class="px-0">
       <v-list-item-icon class="mr-3">
         <v-img :src="value.icon" :size="42"></v-img>
@@ -18,7 +14,7 @@
       <roster-rank-selector
         v-model="computedValue"
         :previous.sync="previousValue"
-        :id="id"
+        :id="rosterId"
         :priority="priority"
       ></roster-rank-selector>
     </template>
@@ -41,7 +37,10 @@ export default {
       type: String,
       default: 'Select rank',
     },
-    id: {
+    rosterId: {
+      type: String,
+    },
+    memberId: {
       type: String,
     },
     priority: {
@@ -77,8 +76,28 @@ export default {
     async getInitRanks() {
       if (!this.ranks.length) {
         this.$store.dispatch(RANKS.actions.FETCH, {
-          url: `/rosters/${this.id}/ranks`,
+          url: `/rosters/${this.rosterId}/ranks`,
           loading: false,
+        });
+      }
+    },
+
+    async onSave() {
+      const cached = this.value.id;
+      try {
+        const item = await this.$axios.$patch(
+          `/rosters/${this.rosterId}/members/${this.memberId}`,
+          {
+            roster_rank_id: this.selectedRank.id,
+          }
+        );
+
+        this.$emit('save', { rank: this.selectedRank });
+      } catch (err) {
+        const error = err.response.data.message || err;
+        this.internalValue = cached;
+        this.$toast.error(error, {
+          position: 'top-center',
         });
       }
     },

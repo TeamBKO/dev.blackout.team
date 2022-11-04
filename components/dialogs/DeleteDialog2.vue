@@ -1,17 +1,17 @@
 <template>
-  <v-dialog v-model="openDialog" persistent :max-width="width">
+  <v-dialog v-model="openDialog" persistent :max-width="width" :dark="dark">
     <template #activator="{ on }" v-if="$scopedSlots.activator">
       <slot name="activator" v-bind="{ on, length }" />
     </template>
     <v-card>
-      <v-card-title>{{ title }}</v-card-title>
+      <v-card-title>{{ computedTitle }}</v-card-title>
       <v-card-text>
         <p>Do you wish to proceed and delete the selected item(s)?</p>
         <p><strong>This action is irrevesible.</strong></p>
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn class="primary" @click="deleteAll">OK</v-btn>
+        <v-btn class="primary" @click="onDelete">OK</v-btn>
         <v-btn text @click="onCancel">Cancel</v-btn>
       </v-card-actions>
     </v-card>
@@ -46,6 +46,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    dark: {
+      type: Boolean,
+      default: false,
+    },
     itemText: {
       type: String,
       default: 'name',
@@ -54,15 +58,30 @@ export default {
       type: String,
       default: 'id',
     },
+    title: {
+      type: String,
+      default: '',
+    },
+    item: {
+      type: Object,
+      default: () => {},
+    },
   },
 
   watch: {
-    openDialog(v) {
-      if (!v) {
-        if (this.item) {
-          this.item = null;
-        }
-      }
+    // openDialog(v) {
+    //   if (!v) {
+    //     if (this.internalItem) {
+    //       this.internalItem = null;
+    //     }
+    //   }
+    // },
+
+    item: {
+      immediate: true,
+      handler: function (item) {
+        this.internalItem = item;
+      },
     },
   },
 
@@ -70,17 +89,20 @@ export default {
     return {
       open: false,
       icon: 'mdi-trash-can',
-      item: null,
+      internalItem: null,
     };
   },
 
   methods: {
     showDialog(item) {
-      this.item = item;
+      this.internalItem = item;
       this.open = true;
     },
-    deleteAll() {
-      this.$emit('delete', this.item ? this.item[this.itemValue] : null);
+    onDelete() {
+      this.$emit(
+        'delete',
+        this.internalItem ? this.internalItem[this.itemValue] : null
+      );
       this.openDialog = false;
     },
     onCancel() {
@@ -91,12 +113,14 @@ export default {
 
   computed: {
     numOfItemsMarkedForDeletion() {
-      return this.item ? 1 : this.length;
+      return this.internalItem ? 1 : this.length;
     },
 
-    title() {
-      return this.item
-        ? `Delete ${this.item[this.itemText]}?`
+    computedTitle() {
+      return this.title
+        ? this.title
+        : this.internalItem
+        ? `Delete ${this.internalItem[this.itemText]}?`
         : `Delete ${this.numOfItemsMarkedForDeletion} item(s)`;
     },
 

@@ -8,9 +8,17 @@
             filled
             label="'Search by roster name'"
             :prepend-inner-icon="'mdi-magnify'"
-            :append-icon="'mdi-close'"
-            @click:append="searchByName = ''"
-          ></v-text-field>
+          >
+            <template #append>
+              <search-by-control
+                v-model="searchBy"
+                :items="searchByItems"
+              ></search-by-control>
+              <v-btn class="ml-1" x-small icon @click="searchByName = ''">
+                <v-icon>mdi-close</v-icon>
+              </v-btn>
+            </template>
+          </v-text-field>
         </v-col>
         <v-col md="6" sm="12">
           <div class="d-flex align-center">
@@ -153,6 +161,7 @@ import FORMS from '~/constants/forms/public.js';
 import UserAvatar from '~/components/avatar/ListAvatar.vue';
 
 import TableActions from '~/components/controls/Actions.vue';
+import SearchByControl from '~/components/controls/SearchByControl.vue';
 
 import DeleteDialog from '~/components/dialogs/DeleteDialog.vue';
 import RosterDialog from '~/components/rosters/RosterDialog.vue';
@@ -185,6 +194,7 @@ export default {
     TableField,
     RosterTableField,
     TableActions,
+    SearchByControl,
     DeleteDialog,
     RosterDialog,
     UserAvatar,
@@ -207,6 +217,9 @@ export default {
 
   data() {
     return {
+      searchByItems: ['Name', 'Form Name', 'Creator'],
+      searchBy: 'Name',
+
       bannerImage: null,
       showFormField: false,
       openFilterSideMenu: false,

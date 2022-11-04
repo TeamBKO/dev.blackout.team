@@ -4,6 +4,7 @@
       <slot name="activator" v-bind="{ on }" />
     </template>
     <v-list :dense="dense">
+      <v-subheader v-if="title">{{ title }}</v-subheader>
       <slot name="top" v-bind="permissions" />
       <template v-for="(action, idx) in actions">
         <v-list-item
@@ -11,12 +12,12 @@
           @click="$emit(action.emit, action.emit)"
           v-if="!$scopedSlots[`action.${action.emit}`]"
         >
-          <v-list-item-icon>
-            <v-icon>{{ action.icon }}</v-icon>
-          </v-list-item-icon>
           <v-list-item-content>
             <v-list-item-subtitle>{{ action.label }}</v-list-item-subtitle>
           </v-list-item-content>
+          <v-list-item-icon>
+            <v-icon>{{ action.icon }}</v-icon>
+          </v-list-item-icon>
         </v-list-item>
         <slot :name="`action.${action.emit}`" v-bind="action" v-else />
       </template>
@@ -57,6 +58,10 @@ export default {
     isDeletable: {
       type: Boolean,
       default: true,
+    },
+    title: {
+      type: String,
+      default: '',
     },
   },
 

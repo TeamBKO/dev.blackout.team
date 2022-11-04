@@ -185,7 +185,7 @@ export default {
     },
 
     onIntersect(observer, entries, isIntersecting) {
-      if (this.isIntersecting && this.roles.length && this.hasMore) {
+      if (isIntersecting && this.roles.length && this.hasMore) {
         this.$store.dispatch(ROLES.actions.FETCH, { loading: true });
       }
     },

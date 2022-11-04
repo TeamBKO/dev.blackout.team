@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="computedOpen" :max-width="maxWidth">
+  <v-dialog v-model="computedOpen" :eager="eager" :max-width="maxWidth">
     <template #activator="props" v-if="$scopedSlots.activator">
       <slot name="activator" v-bind="props" />
     </template>
@@ -65,6 +65,7 @@
 <script>
 import isString from 'lodash/isString';
 import isNull from 'lodash/isNull';
+import isNumber from 'lodash/isNumber';
 import ROSTERS from '~/constants/rosters/public.js';
 import RosterForm from './RosterForm.vue';
 import UserAvatar from '~/components/avatar/ListAvatar.vue';
@@ -83,6 +84,10 @@ export default {
       type: String,
       validator: (prop) => isString(prop) || isNull(prop),
     },
+    rosterFormID: {
+      type: Number,
+      validator: (prop) => isNumber(prop) || isNull(prop),
+    },
     formID: {
       type: String,
       validator: (prop) => isString(prop) || isNull(prop),
@@ -90,14 +95,15 @@ export default {
     member: {
       type: Object,
     },
-    memberStatus: {
-      type: String,
-    },
     maxWidth: {
       type: [String, Number],
       default: '600px',
     },
     readOnly: {
+      type: Boolean,
+      default: false,
+    },
+    eager: {
       type: Boolean,
       default: false,
     },
@@ -139,9 +145,9 @@ export default {
       this.isSending = true;
       try {
         let params = {};
-        let url = `/forms/${this.formID}`;
+        let url = `/forms/${this.userFormID}`;
 
-        if (!this.formID) {
+        if (!this.userFormID) {
           url = `/forms/roster/${this.rosterID}`;
         } else {
           Object.assign(params, { roster_id: this.rosterID });
@@ -173,12 +179,12 @@ export default {
     },
 
     async save() {
-      let url = `/forms/${this.formID}`;
+      let url = `/forms/${this.userFormID}`;
       let params = { fields: this.fields, roster_id: this.rosterID };
 
       if (this.member?.id) {
         /** The member doesn't have a form */
-        if (!this.formID) {
+        if (!this.userFormID) {
           url = '/forms';
           Object.assign(params, {
             fields: this.fields.map((field) => {
@@ -193,6 +199,9 @@ export default {
 
       try {
         const response = await this.$axios.$put(url, params);
+
+        console.log('update_form', response);
+
         this.computedOpen = false;
         this.$toast.success(
           `Updated form for member: ${response.member.username}`,
@@ -222,6 +231,45 @@ export default {
       return this.selectedForm?.applicant?.member
         ? `${this.selectedForm.applicant.member.username}'s Application`
         : '';
+    },
+
+    memberStatus() {
+      return this.member.status;
+    },
+
+    internalFormID() {
+      return this.formID
+        ? this.formID
+        : this.hasForms
+        ? parseInt(
+            Object.keys(this.member.forms).find(
+              (key) => parseInt(key, 10) === this.rosterFormID
+            ),
+            10
+          )
+        : null;
+    },
+
+    isSame() {
+      return this.rosterFormID && this.rosterFormID === this.internalFormID;
+    },
+
+    hasForms() {
+      return this.formID
+        ? true
+        : !!(this.member.forms && Object.keys(this.member.forms).length);
+    },
+
+    userFormID() {
+      return this.formID
+        ? this.formID
+        : this.hasForms && this.isSame
+        ? this.member.forms[this.internalFormID]
+        : null;
+    },
+
+    hasUserForm() {
+      return !!this.userFormID;
     },
 
     readOnlyAndNotPendingOrRejected() {

@@ -26,7 +26,8 @@ export default {
 
   props: {
     value: {
-      type: [String, Number, Array],
+      type: [String, Number, Array, Boolean],
+      default: () => [],
     },
     items: {
       type: [Object, Array],
@@ -71,8 +72,11 @@ export default {
             this.errorMessage = result;
             break;
           } else {
-            this.hasErrors = false;
-            this.errorMessage = '';
+            if (this.hasErrors) {
+              this.hasErrors = false;
+              this.errorMessage = '';
+            }
+            continue;
           }
         }
       }

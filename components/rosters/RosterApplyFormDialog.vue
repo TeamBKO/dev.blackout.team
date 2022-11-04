@@ -1,12 +1,18 @@
 <template>
-  <v-dialog v-model="computedOpen" :max-width="maxWidth">
+  <v-dialog
+    v-model="computedOpen"
+    :max-width="maxWidth"
+    :data-dialog-name="rosterSlug"
+    :hide-overlay="hideOverlay"
+    v-if="dialog"
+  >
     <template #activator="props" v-if="$scopedSlots.activator">
       <slot name="activator" v-bind="props" />
     </template>
     <v-card>
-      <v-toolbar prominent :src="banner">
+      <v-toolbar prominent :src="banner" v-if="!hideHeader">
         <div
-          class="d-flex flex-column align-center justify-center flex-grow-1 inherit"
+          class="d-flex align-center justify-center flex-grow-1 inherit"
           :style="{ height: '100%' }"
         >
           <v-text-field v-model="name" label="Roster" readonly></v-text-field>
@@ -55,9 +61,48 @@
       </v-overlay>
     </v-card>
   </v-dialog>
+  <v-card :width="maxWidth" v-else>
+    <v-card flat>
+      <template v-if="!submitted">
+        <v-card-text>
+          <v-form v-model="valid" ref="form">
+            <roster-form
+              v-if="selectedForm"
+              v-model="fields"
+              ref="formApplication"
+              :form="selectedForm"
+              :open="open"
+            >
+            </roster-form>
+          </v-form>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn text @click="save" :disabled="!valid">Submit</v-btn>
+          <v-btn text @click="$refs.form.reset()">Reset</v-btn>
+        </v-card-actions>
+      </template>
+      <template v-else>
+        <v-card-text>
+          <v-container>
+            <v-row align="center" justify="center">
+              <v-col cols="12" class="text-center">
+                <v-icon :size="120">mdi-checkbox-marked-circle-outline</v-icon>
+              </v-col>
+              <v-col cols="12" class="text-center">
+                <p class="headline">Thank you for submitting an application.</p>
+                <p class="headline">We will get back to you soon.</p>
+              </v-col>
+            </v-row>
+          </v-container>
+        </v-card-text>
+      </template>
+    </v-card>
+  </v-card>
 </template>
 
 <script>
+import { nanoid } from 'nanoid';
 import isString from 'lodash/isString';
 import isNull from 'lodash/isNull';
 import ROSTERS from '~/constants/rosters/public.js';
@@ -78,10 +123,36 @@ export default {
       type: String,
       validator: (prop) => isString(prop) || isNull(prop),
     },
+    rosterSlug: {
+      type: String,
+      default: () => nanoid(),
+    },
     maxWidth: {
       type: [String, Number],
       default: '600px',
     },
+    hideOverlay: {
+      type: Boolean,
+      default: false,
+    },
+    hideHeader: {
+      type: Boolean,
+      default: false,
+    },
+    fetchOnLoad: {
+      type: Boolean,
+      default: false,
+    },
+    dialog: {
+      type: Boolean,
+      default: true,
+    },
+  },
+
+  async created() {
+    if (this.fetchOnLoad) {
+      await this.setForm();
+    }
   },
 
   data() {

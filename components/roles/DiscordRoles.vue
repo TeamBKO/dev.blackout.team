@@ -1,6 +1,6 @@
 <template>
   <v-card-text>
-    <v-alert type="info">
+    <v-alert type="info" v-if="displayAlert">
       <span
         >Map discord roles to site roles. When a mapped discord role is assigned
         to a user on discord, the mapped site role will be assigned to the
@@ -50,6 +50,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    displayAlert: {
+      type: Boolean,
+      default: true,
+    },
   },
 
   data() {
@@ -62,12 +66,20 @@ export default {
   },
 
   watch: {
-    async tabIsActive(v) {
-      if (v) {
+    // async tabIsActive(v) {
+    //   if (v) {
+    //     if (!this.roles.length) {
+    //       await this.fetchItems();
+    //     }
+    //   }
+    // },
+    tabIsActive: {
+      immediate: true,
+      handler: async function (v) {
         if (!this.roles.length) {
           await this.fetchItems();
         }
-      }
+      },
     },
   },
 
@@ -106,6 +118,17 @@ export default {
       } finally {
         this.loading = false;
       }
+    },
+  },
+
+  computed: {
+    computedValue: {
+      get() {
+        return this.value;
+      },
+      set(value) {
+        this.$emit('input', value);
+      },
     },
   },
 };

@@ -388,16 +388,22 @@ export default {
       switch (this.field.type) {
         case 'multiple':
           return this.genRadios(props);
+          break;
         case 'checkbox':
           return this.genCheckboxGroup(props);
+          break;
         case 'select':
           return this.genSelect(props);
+          break;
         case 'textarea':
           return this.genInputField('v-textarea', false, props);
+          break;
         case 'password':
           return this.genInputField('v-text-field', true, props);
+          break;
         case 'birthday':
           return this.genBirthday();
+          break;
         default:
           return this.genInputField('v-text-field', false, props);
       }

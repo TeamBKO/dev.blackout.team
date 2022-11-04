@@ -28,7 +28,7 @@
             >
               <roster-rank-selector
                 v-model="selectedRank"
-                :id="id"
+                :id="rosterID"
                 :priority="priority"
               ></roster-rank-selector>
             </v-col>
@@ -115,6 +115,7 @@ export default {
         id: null,
         rank: null,
         permissions: {
+          id: null,
           can_add_members: false,
           can_edit_members: false,
           can_edit_members_rank: false,
@@ -132,11 +133,18 @@ export default {
   },
 
   methods: {
+    filterPermissions(permissions) {
+      return Object.entries(permissions).reduce((obj, [key, val]) => {
+        if (this.member.permissions[key] === undefined) return obj;
+        obj[key] = val;
+        return obj;
+      }, {});
+    },
     reset() {
       this.selectedPermissions = { ...this.member.permissions };
       this.selectedRank = this.member.rank.id;
     },
-    save() {
+    async save() {
       const member = { id: this.member.id };
       const isDiff = Object.keys(this.selectedPermissions).some((key) => {
         return this.selectedPermissions[key] !== this.member.permissions[key];
@@ -147,11 +155,11 @@ export default {
           permissions: {
             id: this.member.permissions.id,
             ...Object.keys(this.selectedPermissions).reduce((obj, key) => {
-              if (
-                this.selectedPermissions[key] !== this.member.permissions[key]
-              ) {
-                obj[key] = this.selectedPermissions[key];
-              }
+              const match =
+                this.selectedPermissions[key] === this.member.permissions[key];
+
+              if (match) return obj;
+              obj[key] = this.selectedPermissions[key];
               return obj;
             }, {}),
           },
@@ -159,10 +167,39 @@ export default {
       }
 
       if (this.selectedRank !== this.member.rank.id) {
-        Object.assign(member, { roster_rank_id: this.selectedRank });
+        Object.assign(member, {
+          roster_rank_id: this.selectedRank,
+          previous_rank: this.member.rank,
+        });
       }
 
-      this.$emit('save', member);
+      const url = `/rosters/${this.rosterID}/members/${this.member.id}`;
+
+      try {
+        const data = await this.$axios.$patch(url, member);
+
+        if (data.rank) {
+          this.member.rank.id = data.id;
+        }
+
+        if (data.permissions) {
+          this.member.permissions = Object.assign(
+            this.member.permissions,
+            this.filterPermissions(data.permissions)
+          );
+        }
+
+        if (!data.rank) {
+          this.$toast.success('Saved changes.', {
+            position: 'top-center',
+            duration: 3000,
+          });
+        }
+      } catch (err) {
+        console.log(err);
+      }
+
+      // this.$emit('save', member);
     },
     async getMember(id) {
       const params = {};

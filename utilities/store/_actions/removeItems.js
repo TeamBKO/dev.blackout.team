@@ -11,7 +11,18 @@ export const REMOVE_ITEMS = function (namespace, options) {
     const params = { ids };
 
     try {
-      const items = (await this.$axios.delete(options.url, { params })).data;
+      let items;
+      if (options.single) {
+        items = await this.$axios.$delete(options.url.concat(`/${id}`));
+      } else {
+        items = await this.$axios.$delete(options.url, { params });
+      }
+
+      if (!Array.isArray(items)) {
+        items = [items];
+      }
+
+      // const items = (await this.$axios.delete(options.url, { params })).data;
 
       commit(namespace.mutations.REMOVE_ITEMS, items);
       commit(namespace.mutations.REMOVE_FROM_EXCLUDE, items);

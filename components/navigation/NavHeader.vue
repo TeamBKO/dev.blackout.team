@@ -34,7 +34,7 @@
               v-if="!$auth.loggedIn && displayLocalLogin"
             >
               <template #activator="{ on }">
-                <a class="v-tab" v-on="on">
+                <a id="authenticate" class="v-tab" v-on="on">
                   <v-icon left>mdi-account-circle</v-icon>
                   <span>Sign In</span>
                 </a>

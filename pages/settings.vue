@@ -66,7 +66,9 @@
         <v-tabs v-model="tab" vertical icons-and-text>
           <v-tab>Personal <v-icon>mdi-account-details</v-icon></v-tab>
           <v-tab>Security <v-icon>mdi-security</v-icon></v-tab>
-          <v-tab>Social <v-icon>mdi-account-network-outline</v-icon></v-tab>
+          <v-tab v-if="info.local"
+            >Social <v-icon>mdi-account-network-outline</v-icon></v-tab
+          >
 
           <v-tab-item eager transition="fade-transition">
             <v-card flat>
@@ -90,6 +92,20 @@
                     </v-col>
                   </v-row>
                 </v-form>
+                <v-list-item class="px-0" two-line>
+                  <v-spacer></v-spacer>
+
+                  <v-list-item-action v-if="allowUserToDeleteAccount">
+                    <delete-self-button>
+                      <template #activator="{ on }">
+                        <v-btn text color="error" v-on="on"
+                          ><v-icon left>mdi-trash-can-outline</v-icon
+                          ><span>Delete Account</span></v-btn
+                        >
+                      </template>
+                    </delete-self-button>
+                  </v-list-item-action>
+                </v-list-item>
               </v-card-text>
               <v-card-actions>
                 <v-spacer></v-spacer>
@@ -143,12 +159,12 @@
               </v-card-text>
             </v-card>
           </v-tab-item>
-          <v-tab-item eager transition="fade-transition">
+          <v-tab-item eager transition="fade-transition" v-if="info.local">
             <v-card flat>
               <v-card-title>Social</v-card-title>
               <v-card-text>
                 <v-list>
-                  <v-list-item class="px-0" two-line v-if="info.local">
+                  <v-list-item class="px-0" two-line>
                     <v-list-item-content>
                       <v-list-item-title>Discord</v-list-item-title>
                       <v-list-item-subtitle
@@ -159,23 +175,8 @@
                     </v-list-item-content>
                     <v-list-item-action>
                       <v-btn :color="'#7289da'" @click="manageDiscordAccount">
-                        <v-icon left>mdi-discord</v-icon>
                         <span>{{ discordButtonText }}</span>
                       </v-btn>
-                    </v-list-item-action>
-                  </v-list-item>
-                  <v-list-item class="px-0" two-line>
-                    <v-spacer></v-spacer>
-
-                    <v-list-item-action>
-                      <delete-self-button>
-                        <template #activator="{ on }">
-                          <v-btn text color="error" v-on="on"
-                            ><v-icon left>mdi-trash-can-outline</v-icon
-                            ><span>Delete Account</span></v-btn
-                          >
-                        </template>
-                      </delete-self-button>
                     </v-list-item-action>
                   </v-list-item>
                 </v-list>

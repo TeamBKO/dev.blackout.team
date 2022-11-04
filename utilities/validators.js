@@ -1,10 +1,12 @@
 import capitalize from 'lodash/capitalize';
 
-const emailPattern =
+export const email =
   /^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})$/;
-const alphaPattern = /^[a-zA-Z0-9\-\s]+$/;
-const passwordPattern =
+export const alpha = /^[a-zA-Z0-9\-\s]+$/;
+export const password =
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\&])(?=.{8,})/;
+export const url =
+  /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/;
 
 export const isRequired = function (fieldName) {
   return (v) => !!v || `${capitalize(fieldName)} is required.`;
@@ -32,6 +34,10 @@ export const hasSpecialCharacter = function (fieldName) {
   return (v) =>
     /(?=.*[!@#$%&_])/.test(v) ||
     `${capitalize(fieldName)} must contain atleast 1 special character`;
+};
+
+export const hasValidURL = function (fieldName) {
+  return (v) => url.test(v) || `${capitalize(fieldName)} is not a valid URL`;
 };
 
 export const hasSelected = function (requiredSelected) {
@@ -75,19 +81,17 @@ export const isNotAfter = function (date, fieldName) {
 
 export const isAlphanumeric = function (fieldName) {
   return (v) =>
-    alphaPattern.test(v) || `${capitalize(fieldName)} must be alphanumeric.`;
+    alpha.test(v) || `${capitalize(fieldName)} must be alphanumeric.`;
 };
 
 export const isEmail = function (fieldName) {
   return (v) =>
-    emailPattern.test(v) ||
-    `${capitalize(fieldName)} must be a valid email address.`;
+    email.test(v) || `${capitalize(fieldName)} must be a valid email address.`;
 };
 
 export const isValidPassword = function (fieldName) {
   return (v) =>
-    passwordPattern.test(v) ||
-    `${capitalize(fieldName)} must meet the criteria.`;
+    password.test(v) || `${capitalize(fieldName)} must meet the criteria.`;
 };
 
 export default {

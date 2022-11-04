@@ -25,8 +25,11 @@
 
 <script>
 import RANKS from '~/constants/rosters/ranks/public.js';
+import FormSelectWithCursor from '~/components/form/FormSelectWithCursor.vue';
 export default {
   name: 'RosterRankSelector',
+
+  components: { FormSelectWithCursor },
 
   props: {
     value: {

@@ -190,6 +190,10 @@ export default {
 
       const icon = !this.menuOpen ? 'mdi-chevron-down' : 'mdi-chevron-up';
 
+      const attrs = {
+        'data-tab-name': this.link.title.toLowerCase(),
+      };
+
       return this.hasChildren
         ? this.genMenu(
             this.link.children,
@@ -197,11 +201,12 @@ export default {
             [this.link.title, this.genIcon(icon)],
             {
               staticClass: 'v-tab',
+              ...attrs,
             },
             { 'content-class': this.menuId },
             'menu'
           )
-        : this.$createElement('v-tab', { props, class: classes }, [
+        : this.$createElement('v-tab', { attrs, props, class: classes }, [
             this.link.title,
           ]);
     },

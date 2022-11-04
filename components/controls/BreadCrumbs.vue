@@ -1,10 +1,8 @@
 <template>
   <v-breadcrumbs :items="breadcrumbs">
-    <template #item="{ item }">
-      <v-breadcrumbs-item :disabled="item.disabled" :to="item.to" nuxt>{{
-        item.text
-      }}</v-breadcrumbs-item>
-    </template>
+    <!-- <template #item="{ item }">
+      <v-breadcrumbs-item>{{ item.text }}</v-breadcrumbs-item>
+    </template> -->
   </v-breadcrumbs>
 </template>
 
@@ -20,24 +18,71 @@ const deslugify = function (str) {
 export default {
   name: 'BreadCrumbs',
 
-  computed: {
-    breadcrumbs() {
+  props: {
+    currentRoute: {
+      type: Object,
+      default: undefined,
+    },
+  },
+
+  data() {
+    return {
+      breadcrumbs: [],
+    };
+  },
+
+  created() {
+    this.breadcrumbs = this.formatRoutes();
+
+    if (this.currentRoute) {
+      const lastIndex = this.breadcrumbs.length - 1;
+      this.breadcrumbs.splice(lastIndex, 1, this.currentRoute);
+    }
+  },
+
+  methods: {
+    formatRoutes() {
       const routes = this.$router.currentRoute.fullPath.slice(1).split('/');
       return [
-        { text: 'Home', disabled: false, to: '/' },
+        { text: 'Home', disabled: false, to: '/', nuxt: true },
         ...routes.map((route, idx, arr) => {
           const href = uniq(this.$router.resolve(route).href.split('/')).join(
             '/'
           );
+          const disabled = this.$router.currentRoute.path === href;
           return {
             text: deslugify(route),
-            disabled: this.$router.currentRoute.path === href,
-            link: true,
+            // disabled,
+            // link: true,
+            exact: true,
+            nuxt: true,
             to: href,
           };
         }),
       ];
     },
+  },
+
+  computed: {
+    // breadcrumbs() {
+    //   const routes = this.$router.currentRoute.fullPath.slice(1).split('/');
+    //   return [
+    //     { text: 'Home', disabled: false, to: '/', nuxt: true },
+    //     ...routes.map((route, idx, arr) => {
+    //       const href = uniq(this.$router.resolve(route).href.split('/')).join(
+    //         '/'
+    //       );
+    //       const disabled = this.$router.currentRoute.path === href;
+    //       return {
+    //         text: deslugify(route),
+    //         disabled,
+    //         // link: true,
+    //         nuxt: true,
+    //         to: href,
+    //       };
+    //     }),
+    //   ];
+    // },
   },
 };
 </script>

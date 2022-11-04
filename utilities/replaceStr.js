@@ -13,14 +13,16 @@ export default function replaceStr(str, obj) {
   if (str && isString(str)) {
     const match = str.match(/(%)\w+\1/g);
 
-    result = match.reduce((_str, exp) => {
-      const key = exp.slice(exp.indexOf('%') + 1, exp.lastIndexOf('%'));
+    if (match) {
+      result = match.reduce((_str, exp) => {
+        const key = exp.slice(exp.indexOf('%') + 1, exp.lastIndexOf('%'));
 
-      if (obj[key]) {
-        _str = _str.replace(/(%)\w+\1/i, obj[key]);
-      }
-      return _str;
-    }, str);
+        if (obj[key]) {
+          _str = _str.replace(/(%)\w+\1/i, obj[key]);
+        }
+        return _str;
+      }, str);
+    }
   }
   return result;
 }

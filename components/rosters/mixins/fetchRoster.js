@@ -1,5 +1,5 @@
 import pickBy from 'lodash/pickBy';
-import snakeCase from 'lodash/snakeCase';
+import setRosterForm from '../helpers/setRosterForm.js';
 import RANKS from '~/constants/rosters/ranks/public.js';
 const isTrue = (value) => value === true;
 
@@ -11,16 +11,11 @@ export default {
           await this.$axios.$get(`/rosters/${this.$route.params.slug}`);
 
         if (roster_form) {
-          this.formID = roster_form.id;
-          if (roster_form?.fields?.length) {
-            this.additionalColumns = roster_form.fields.map(({ alias }) =>
-              snakeCase(alias)
-            );
-          }
+          this.rosterInfo.roster_form = roster_form;
+          setRosterForm.call(this, roster_form);
         }
 
         if (ranks?.length) {
-          // this.ranks = ranks;
           this.$store.commit(RANKS.mutations.SET_ITEMS, ranks);
           this.$store.commit(RANKS.mutations.SET_HAS_MORE, false);
         }
@@ -31,7 +26,6 @@ export default {
 
         if (member) {
           const { permissions, ...currentMember } = member;
-
           this.currentMember = currentMember;
           this.permissions = Object.assign(
             this.permissions,

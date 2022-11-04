@@ -11,8 +11,12 @@
         <template #extension>
           <v-row>
             <v-col cols="6">
-              <v-btn :color="buttonColor"><v-icon>mdi-view-list</v-icon></v-btn>
-              <v-btn :color="buttonColor"><v-icon>mdi-view-grid</v-icon></v-btn>
+              <v-btn :color="buttonColor" @click="mode = 'list'"
+                ><v-icon>mdi-view-list</v-icon></v-btn
+              >
+              <v-btn :color="buttonColor" @click="mode = 'grid'"
+                ><v-icon>mdi-view-grid</v-icon></v-btn
+              >
             </v-col>
             <v-col cols="6">
               <v-select
@@ -23,50 +27,46 @@
                 filled
                 solo
                 :items="chartList"
+                :item-value="'chartID'"
+                :item-text="'name'"
               >
                 <template #selection="{ item, index }">
-                  <span>Display charts (+{{ showChart.length - 1 }})</span>
+                  <span v-if="index === 0">
+                    <span>Display charts (+{{ showCharts.length }})</span>
+                  </span>
                 </template>
               </v-select>
             </v-col>
           </v-row>
-          <!-- <v-btn small :color="buttonColor"
-            ><v-icon>mdi-view-list</v-icon></v-btn
-          >
-          <v-btn small :color="buttonColor"
-            ><v-icon>mdi-view-grid</v-icon></v-btn
-          >
-
-          <v-spacer></v-spacer>
-          <v-select
-            v-model="showCharts"
-            label="Display Charts"
-            multiple
-            dense
-            filled
-            solo
-            :items="chartList"
-          >
-            <template #selection="{ item, index }">
-              <span>Display charts (+{{ showChart.length - 1 }})</span>
-            </template>
-          </v-select> -->
         </template>
         <v-spacer></v-spacer>
-        <v-btn text @click="open = false"><v-icon>mdi-close</v-icon></v-btn>
+        <v-btn icon @click="open = false"><v-icon>mdi-close</v-icon></v-btn>
       </v-toolbar>
-      <v-card flat v-for="(chart, idx) in charts" :key="idx">
-        <v-card-title>{{ chart.chartTitle }}</v-card-title>
-        <v-card-text>
-          <apex-chart
-            :series="chart.series"
-            :options="chart.options"
-            :type="chart.options.chart.type"
-            :height="500"
-            v-if="loaded"
-          ></apex-chart>
-        </v-card-text>
-      </v-card>
+      <v-card-text>
+        <v-container fluid>
+          <v-row>
+            <v-col
+              v-for="(chart, idx) in charts"
+              v-show="showCharts.includes(chart.options.chart.id)"
+              :cols="idx === 0 ? 12 : viewMode"
+              :key="idx"
+            >
+              <v-card flat>
+                <v-card-title>{{ chart.chartTitle }}</v-card-title>
+                <v-card-text>
+                  <apex-chart
+                    :series="chart.series"
+                    :options="chart.options"
+                    :type="chart.options.chart.type"
+                    :height="500"
+                    v-if="loaded"
+                  ></apex-chart>
+                </v-card-text>
+              </v-card>
+            </v-col>
+          </v-row>
+        </v-container>
+      </v-card-text>
     </v-card>
   </v-dialog>
 </template>
@@ -105,6 +105,7 @@ export default {
       showCharts: [],
       chartList: [],
       buttonColor: '#1e1e1e',
+      mode: 'list',
     };
   },
 
@@ -145,10 +146,23 @@ export default {
           }),
         ];
 
+        this.showCharts = this.charts.map((c) => c.options.chart.id);
+
+        this.chartList = this.charts.map((c) => ({
+          name: c.chartTitle,
+          chartID: c.options.chart.id,
+        }));
+
         this.loaded = true;
       } catch (err) {
         console.log(err);
       }
+    },
+  },
+
+  computed: {
+    viewMode() {
+      return this.mode === 'list' || this.$vuetify.breakpoint.mobile ? 12 : 6;
     },
   },
 };

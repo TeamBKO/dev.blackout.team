@@ -24,7 +24,11 @@ export default {
   css: ['~/assets/main.css'],
 
   // Plugins to run before rendering page: https://go.nuxtjs.dev/config-plugins
-  plugins: ['~/plugins/permissions.js', '~/plugins/settings.js'],
+  plugins: [
+    '~/plugins/permissions.js',
+    '~/plugins/settings.js',
+    // { src: '~/plugins/vueMessages.js', mode: 'client' },
+  ],
 
   // Auto import components: https://go.nuxtjs.dev/config-components
   components: true,
@@ -176,7 +180,7 @@ export default {
 
   // Build Configuration: https://go.nuxtjs.dev/config-build
   build: {
-    transpile: ['vuetify', 'vue-infinite-loading'],
+    transpile: ['vuetify'],
     babel: {
       plugins: [['@babel/plugin-proposal-private-methods', { loose: true }]],
     },

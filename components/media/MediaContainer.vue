@@ -52,24 +52,6 @@
             <v-icon>mdi-view-list</v-icon>
           </v-btn>
         </v-btn-toggle>
-
-        <!-- <delete-dialog
-          v-model="open"
-          @deleteAll="onDelete"
-          @cancel="onCancel"
-          :length="selected.length"
-          :disabled="isDeleteDisabled"
-          v-if="canDelete"
-        ></delete-dialog>
-        <v-btn
-          class="v-tab"
-          text
-          :disabled="isUploadDisabled"
-          @click="uploadFiles"
-        >
-          <v-icon left v-text="uploadIcon"></v-icon>
-          <span>Upload {{ upload.length }}</span>
-        </v-btn> -->
       </template>
     </v-toolbar>
     <v-card-text class="fill-height">
@@ -89,6 +71,7 @@
           v-model="gallery"
           v-bind="thumbnailDimensions"
           @openDialog="openSharingDialog"
+          :singlePick="singlePick"
           :selected.sync="gallerySelected"
           :newlyAdded="newlyAdded"
           :imageSelected.sync="imageSelected"
@@ -135,6 +118,10 @@ export default {
       type: String,
     },
     single: {
+      type: Boolean,
+      default: false,
+    },
+    singlePick: {
       type: Boolean,
       default: false,
     },

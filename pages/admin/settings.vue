@@ -32,7 +32,7 @@
                         <v-text-field
                           v-model="setting.value"
                           dense
-                          filled
+                          solo-inverted
                           :rules="setting.rules"
                         ></v-text-field>
                       </template>
@@ -51,7 +51,7 @@
                             dense
                             @keydown="onKeyDown"
                             type="number"
-                            filled
+                            solo
                             :min="setting.min"
                             :max="setting.max"
                           ></v-text-field>
@@ -68,6 +68,85 @@
                     </v-list-item-action>
                   </template>
                 </v-list-item>
+                <div class="d-flex flex-column" v-if="key === 'discord'">
+                  <v-list-item>
+                    <v-list-item-content>
+                      <v-list-item-title
+                        >Create/Edit Discord Message</v-list-item-title
+                      >
+                      <v-list-item-subtitle
+                        >Create/Edit the message you want displayed on your
+                        welcome channel, or the entry point for recruitment.
+                        Only 25 rosters can be shown at a time. Doesn't work
+                        with web hooks.</v-list-item-subtitle
+                      >
+                    </v-list-item-content>
+                    <v-list-item-action>
+                      <discord-message-editor>
+                        <template #activator="{ on }">
+                          <v-btn depressed small v-on="on">Edit</v-btn>
+                        </template>
+                        <!-- <template #prepand-content>
+                          <accordion @click.native.once="getRosters">
+                            <template #title>
+                              <span
+                                >ROSTERS
+                                <v-tooltip top>
+                                  <template #activator="{ on }">
+                                    <v-icon v-on="on" left
+                                      >mdi-alert-circle-outline</v-icon
+                                    >
+                                  </template>
+                                  Select the rosters you want to display on the
+                                  message as button links.
+                                </v-tooltip></span
+                              >
+                            </template>
+                            <roster-list
+                              v-model="selectedRosters"
+                            ></roster-list>
+                          </accordion>
+                        </template> -->
+                      </discord-message-editor>
+                    </v-list-item-action>
+                  </v-list-item>
+                  <v-list-item>
+                    <v-list-item-content>
+                      <v-list-item-title>Watch Discord Roles</v-list-item-title>
+                      <v-list-item-subtitle
+                        >Watch for specific roles to be assigned to discord
+                        users and if mapped to a site role, apply
+                        them.</v-list-item-subtitle
+                      >
+                    </v-list-item-content>
+                    <v-list-item-action>
+                      <setting-discord-roles v-model="watchedDisordRoles">
+                        <template #activator="{ on }">
+                          <v-btn small depressed v-on="on">Edit</v-btn>
+                        </template>
+                      </setting-discord-roles>
+                    </v-list-item-action>
+                  </v-list-item>
+                  <v-list-item>
+                    <v-list-item-content>
+                      <v-list>
+                        <v-list-item
+                          v-for="(watched, i) in watchedDisordRoles"
+                          :key="i"
+                        >
+                          <v-list-item-action>
+                            <v-btn icon><v-icon>mdi-close</v-icon></v-btn>
+                          </v-list-item-action>
+                          <v-list-item-content>
+                            <v-list-item-title>{{
+                              watched.name
+                            }}</v-list-item-title>
+                          </v-list-item-content>
+                        </v-list-item>
+                      </v-list>
+                    </v-list-item-content>
+                  </v-list-item>
+                </div>
               </v-list>
             </v-expansion-panel-content>
           </v-expansion-panel>
@@ -86,11 +165,16 @@
 
 <script>
 import SETTINGS from '~/constants/settings/public.js';
-import setPageTitle from '~/middleware/setPageTitle';
+import ROSTERS from '~/constants/rosters/public.js';
+import setPageTitle from '~/middleware/setPageTitle.js';
 import cloneDeep from 'lodash/cloneDeep';
 import snakeCase from 'lodash/snakeCase';
 
 import ActionBar from '~/components/controls/ActionBar.vue';
+import SettingDiscordRoles from '~/components/settings/SettingDiscordRoles.vue';
+import DiscordMessageEditor from '~/components/discord/DiscordMessageEditorDialog.vue';
+import Accordion from '~/components/controls/Accordion.vue';
+import RosterList from '~/components/rosters/RosterList.vue';
 
 const reduce = (sets) =>
   Object.entries(sets).reduce((output, [key, item]) => {
@@ -129,7 +213,13 @@ export default {
 
   layout: 'admin',
 
-  components: { ActionBar },
+  components: {
+    ActionBar,
+    SettingDiscordRoles,
+    DiscordMessageEditor,
+    Accordion,
+    RosterList,
+  },
 
   middleware: [
     'auth',
@@ -160,6 +250,8 @@ export default {
     return {
       isSaving: false,
       showActionBar: false,
+      watchedDisordRoles: [],
+      selectedRosters: [],
     };
   },
 
@@ -176,8 +268,13 @@ export default {
     },
 
     reset() {
-      // this.groups = this.baseSettings;
       this.groups = reduce(this.$store.getters[SETTINGS.getters.SETTINGS]());
+    },
+
+    getRosters() {
+      const rosters = this.$store.getters[ROSTERS.getters.ITEMS];
+      if (rosters.length) return;
+      this.$store.dispatch(ROSTERS.actions.FETCH, { url: '/rosters' });
     },
   },
 

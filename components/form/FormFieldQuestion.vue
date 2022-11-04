@@ -29,12 +29,11 @@
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </div>
-      <!-- <v-switch label="Optional" v-model="computedOptional"></v-switch> -->
       <div class="d-flex flex-column">
         <div class="d-flex">
           <v-switch label="Optional" v-model="computedOptional"></v-switch>
         </div>
-        <div class="d-flex" v-if="isSingleAnswer">
+        <div class="d-flex" v-if="!isTextAnswer">
           <div class="d-flex-inline flex-shrink-1">
             <v-switch
               label="Use as column"
@@ -113,6 +112,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    multiple: {
+      type: Boolean,
+      default: false,
+    },
     alias: {
       type: String,
     },
@@ -125,6 +128,12 @@ export default {
     isDrag: {
       type: Boolean,
       default: false,
+    },
+  },
+
+  watch: {
+    type(type) {
+      this.$emit('update:multiple', type === 'checkbox');
     },
   },
 
@@ -199,6 +208,10 @@ export default {
 
     isSingleAnswer() {
       return this.type === 'multiple' || this.type === 'select';
+    },
+
+    isTextAnswer() {
+      return this.type === 'textfield' || this.type === 'textarea';
     },
 
     computedType: {

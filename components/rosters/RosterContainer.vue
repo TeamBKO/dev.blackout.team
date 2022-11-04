@@ -15,13 +15,13 @@
           </v-container>
         </v-img>
       </template>
-      <template #extension>
+      <template #extension v-if="currentMember">
         <v-container>
           <v-tabs v-model="tab" @change="onChange">
             <v-tab v-for="tab in computedTabs" :key="tab.name">
               {{ tab.name }}
             </v-tab>
-            <v-spacer></v-spacer>
+            <v-spacer v-if="!$vuetify.breakpoint.smAndDown"></v-spacer>
             <roster-analytics :rosterID="rosterInfo.id">
               <template #activator="{ on }">
                 <div class="v-tab" v-on="on">
@@ -50,17 +50,12 @@
               ref="settings"
               @onUpdate="setRosterData"
               :title="'Roster Settings'"
+              :settings="rosterInfo"
             >
-              <template #activator="{ on }">
+              <template #activator>
                 <div
                   class="v-tab"
-                  @click="
-                    $refs.settings.setEditableContent(
-                      rosterInfo.id,
-                      rosterInfo,
-                      false
-                    )
-                  "
+                  @click="$refs.settings.setEditableContent(rosterInfo.id)"
                 >
                   <v-icon left>mdi-cog-outline</v-icon>
                   <span>Settings</span>
@@ -73,6 +68,7 @@
               :isApplicantTab="isApplicantTab"
               :isMemberTab="isMemberTab"
               :isRejectedTab="isRejectedTab"
+              :title="'Batch Actions'"
               @approved="updateMemberStatus(null, null, $event)"
               @rejected="updateMemberStatus(null, null, $event)"
             >
@@ -96,6 +92,7 @@
                 </v-list-item>
               </template>
               <template #bottom v-if="permissions.can_delete_roster">
+                <v-divider></v-divider>
                 <v-dialog
                   v-model="openDeleteRosterPrompt"
                   max-width="500"
@@ -140,12 +137,29 @@
     </v-toolbar>
 
     <v-container>
-      <slot name="prepend" />
       <v-row v-if="!hideBreadcrumbs">
         <v-col cols="12">
           <bread-crumbs></bread-crumbs>
         </v-col>
       </v-row>
+    </v-container>
+
+    <v-container fluid v-if="!currentMember && formID">
+      <v-row class="py-5" justify="center" align="center">
+        <roster-application-dialog
+          ref="form"
+          hide-overlay
+          hide-header
+          fetch-on-load
+          :dialog="false"
+          :rosterID="rosterInfo.id"
+          @onUpdate="disableApplyButton = true"
+        />
+      </v-row>
+    </v-container>
+
+    <v-container v-else>
+      <slot name="prepend" />
       <v-sheet class="mb-14" rounded elevation="2">
         <v-row>
           <v-col cols="12">
@@ -153,10 +167,20 @@
               v-model="selected"
               disable-pagination
               hide-default-footer
-              :show-select="hasPermissionsForActions"
+              :show-select="canSelect"
               :items="members[currentTab].items"
               :headers="computedHeaders[currentTab]"
             >
+              <template
+                #item.data-table-select="{ item, isSelected, select }"
+                v-if="isMemberTab"
+              >
+                <v-checkbox
+                  v-if="item.rank.priority > 1"
+                  :value="isSelected"
+                  @click.native="toggleSelect(select, isSelected, item)"
+                ></v-checkbox>
+              </template>
               <template #item.username="{ item }">
                 <v-list-item class="px-0">
                   <v-list-item-avatar>
@@ -169,16 +193,19 @@
                   </v-list-item-content>
                 </v-list-item>
               </template>
-              <template #item.rank="{ item }">
+              <template
+                #item.rank="{ item }"
+                v-if="!isApplicantTab || isRejectedTab"
+              >
                 <roster-rank-field
                   v-if="
                     permissions.can_edit_member_ranks &&
                     currentMember.rank.priority <= item.rank.priority
                   "
                   :value="item.rank"
-                  :id="rosterInfo.id"
+                  :rosterId="rosterInfo.id"
+                  :memberId="item.id"
                   :priority="currentMember.rank.priority"
-                  @save="updateMemberRank(item.id, $event)"
                 ></roster-rank-field>
                 <v-list-item class="px-0" v-else>
                   <v-list-item-icon class="mr-3">
@@ -213,22 +240,22 @@
                     </template>
                     <template #top="{ can_edit_members }">
                       <roster-member-form-dialog
-                        v-if="item.form && can_edit_members && formID"
+                        v-if="item.forms[formID] && can_edit_members && formID"
                         :rosterID="rosterInfo.id"
-                        :formID="item.form.id"
-                        :memberStatus="item.status"
+                        :rosterFormID="formID"
+                        :member="item"
                         readOnly
                       >
                         <template #activator="{ on }">
                           <v-list-item v-on="on">
-                            <v-list-item-icon>
-                              <v-icon>mdi-eye</v-icon>
-                            </v-list-item-icon>
                             <v-list-item-content>
                               <v-list-item-subtitle>
                                 View Form
                               </v-list-item-subtitle>
                             </v-list-item-content>
+                            <v-list-item-icon>
+                              <v-icon>mdi-eye</v-icon>
+                            </v-list-item-icon>
                           </v-list-item>
                         </template>
                       </roster-member-form-dialog>
@@ -240,20 +267,20 @@
                           formID
                         "
                         @onUpdate="updateMemberThroughForm"
-                        :formID="item.form ? item.form.id : null"
                         :rosterID="rosterInfo.id"
+                        :rosterFormID="formID"
                         :member="item"
                       >
                         <template #activator="{ on }">
                           <v-list-item v-on="on">
-                            <v-list-item-icon>
-                              <v-icon>mdi-eye</v-icon>
-                            </v-list-item-icon>
                             <v-list-item-content>
                               <v-list-item-subtitle>
                                 Edit Form
                               </v-list-item-subtitle>
                             </v-list-item-content>
+                            <v-list-item-icon>
+                              <v-icon>mdi-pencil</v-icon>
+                            </v-list-item-icon>
                           </v-list-item>
                         </template>
                       </roster-member-form-dialog>
@@ -266,15 +293,39 @@
                         "
                         @click="$refs.memberDialog.getMember(item.id)"
                       >
+                        <v-list-item-content>
+                          <v-list-item-subtitle>
+                            Edit Member
+                          </v-list-item-subtitle>
+                        </v-list-item-content>
                         <v-list-item-icon>
                           <v-icon>mdi-account-cog-outline</v-icon>
                         </v-list-item-icon>
-                        <v-list-item-content>
-                          <v-list-item-subtitle>
-                            Edit Permissions
-                          </v-list-item-subtitle>
-                        </v-list-item-content>
                       </v-list-item>
+                    </template>
+                    <template
+                      #action.removed
+                      v-if="currentMember && currentMember.id === item.id"
+                    >
+                      <delete-dialog
+                        :item="item"
+                        :item-text="'username'"
+                        :title="'Leave roster?'"
+                        @delete="leaveRoster"
+                      >
+                        <template #activator="{ on }">
+                          <v-list-item v-on="on">
+                            <v-list-item-content>
+                              <v-list-item-subtitle
+                                >Leave Roster</v-list-item-subtitle
+                              >
+                            </v-list-item-content>
+                            <v-list-item-icon>
+                              <v-icon>mdi-logout</v-icon>
+                            </v-list-item-icon>
+                          </v-list-item>
+                        </template>
+                      </delete-dialog>
                     </template>
                   </roster-actions>
                 </div>
@@ -316,40 +367,16 @@
       :itemText="'username'"
       @delete="removeMember"
     ></delete-dialog>
-    <roster-application-dialog
-      v-model="openRosterMemberForm"
-      ref="form"
-      :rosterID="rosterInfo.id"
-      @onUpdate="disableApplyButton = true"
-    />
-    <v-overlay v-model="isPrivate" opacity="0.9" v-if="isPrivate">
-      <v-container fluid>
-        <v-row justify="center" align="center">
-          <v-card width="800px" v-if="!openRosterMemberForm">
-            <v-card-text>
-              <div class="d-flex justify-center align-center flex-column">
-                <v-icon :size="96">mdi-eye</v-icon>
-                <h3>Private</h3>
-                <p>
-                  This is a private roster. Restricted to members and above.
-                </p>
 
-                <v-btn
-                  class="my-4"
-                  @click="openRosterMemberForm = true"
-                  large
-                  :disabled="memberIsPending || disableApplyButton"
-                  >Apply To Roster</v-btn
-                >
-                <v-btn class="my-4" large @click="$router.push('/rosters')"
-                  >Back to Rosters</v-btn
-                >
-              </div>
-            </v-card-text>
-          </v-card>
-        </v-row>
-      </v-container>
-    </v-overlay>
+    <v-snackbar
+      bottom
+      dark
+      :value="selected.length"
+      :timeout="-1"
+      class="text-center"
+    >
+      Selected: {{ selected.length }} / {{ maxSelected }}
+    </v-snackbar>
   </v-container>
 </template>
 
@@ -383,6 +410,14 @@ import removeMember from './mixins/removeMember.js';
 import updateMember from './mixins/updateMember.js';
 import updateMemberRank from './mixins/updateMemberRank.js';
 import updateMemberStatus from './mixins/updateMemberStatus.js';
+
+import socketUpdateMemberStatus from './helpers/socketUpdateMemberStatus.js';
+import socketUpdateSettings from './helpers/socketUpdateSettings.js';
+import socketUpdateMember from './helpers/socketUpdateMember.js';
+import socketUpdateMemberRank from './helpers/socketUpdateMemberRank.js';
+import socketUpdateMemberPermissions from './helpers/socketUpdateMemberPermissions.js';
+import socketAddApplicant from './helpers/socketAddApplicant.js';
+import socketRemoveMember from './helpers/socketRemoveMembers.js';
 
 export default {
   name: 'RosterContainer',
@@ -426,47 +461,55 @@ export default {
   async mounted() {
     await this.fetchRoster();
 
-    // if (this.additionalColumns.length) {
-    //   this.headers = Object.entries(this.headers).reduce(
-    //     (obj, [key, header]) => {
-    //       obj[key] = header.splice(
-    //         1,
-    //         0,
-    //         ...this.additionalColumns.map((column) => ({
-    //           text: column.toUpperCase().replace('_', ' '),
-    //           sortable: false,
-    //           value: snakeCase(column),
-    //         }))
-    //       );
-    //       return obj;
-    //     },
-    //     {}
-    //   );
-    // }
     if (this.isPrivate) {
       document.documentElement.style.overflow = 'hidden';
     }
-  },
 
-  // watch: {
-  //   additionalColumns(columns) {
-  //     if (columns.length) {
-  //       const headers = this.headers[this.currentTab];
-  //       headers.splice(
-  //         1,
-  //         0,
-  //         ...columns.map((column) => ({
-  //           text: column.toUpperCase().replace('_', ' '),
-  //           sortable: false,
-  //           value: snakeCase(column),
-  //         }))
-  //       );
-  //     }
-  //   },
-  // },
+    this.socket = this.$nuxtSocket({
+      channel: '/rosters',
+      reconnection: true,
+      auth: {
+        token: this.$auth.strategy.refreshToken.get(),
+      },
+    });
+
+    this.socket.emit('join:roster', this.rosterInfo.id);
+
+    this.socket.on('remove:members', (members, source) => {
+      socketRemoveMember.call(this, members, source);
+    });
+
+    this.socket.on('update:member', (member) =>
+      socketUpdateMember.call(this, member)
+    );
+
+    this.socket.on('update:member:permissions', (id, member) => {
+      socketUpdateMemberPermissions.call(this, id, member);
+    });
+
+    this.socket.on('update:member:rank', (member, previous) => {
+      socketUpdateMemberRank.call(this, member, previous);
+    });
+
+    this.socket.on('update:members:status', (members, source) =>
+      socketUpdateMemberStatus.call(this, members, source)
+    );
+
+    this.socket.on('add:applicant', (member) => {
+      socketAddApplicant.call(this, member);
+    });
+
+    this.socket.on('update:settings', (settings) => {
+      socketUpdateSettings.call(this, settings);
+    });
+  },
 
   data() {
     return {
+      socket: null,
+      socketStatus: {},
+      badStatus: {},
+
       rosterInfo: {
         id: null,
         name: '',
@@ -480,9 +523,10 @@ export default {
         show_fields_as_columns: false,
         roles: [],
         roster_form: null,
+        assign_discord_roles_on_approval: false,
+        link_to_discord: false,
+        applicant_form_channel_id: false,
       },
-
-      additionalColumns: [],
 
       openSettings: false,
       openMediaDialog: false,
@@ -507,8 +551,10 @@ export default {
       },
 
       formID: null,
+      memberFormID: null,
 
       ranks: [],
+      maxSelected: 50,
 
       tab: 0,
       tabNames: ['approved', 'pending', 'rejected'],
@@ -597,6 +643,34 @@ export default {
   },
 
   methods: {
+    formatPermissions(obj) {
+      return Object.entries(obj).reduce((output, [key, value]) => {
+        if (this.permissions[key] !== undefined) {
+          output[key] = value;
+        }
+        return output;
+      }, {});
+    },
+
+    getRosterId() {
+      return this.rosterInfo.id;
+    },
+
+    toggleSelect(select, isSelected, member) {
+      if (this.selected.length >= this.maxSelected) return;
+      /** owners cannot be interacted in this manner. */
+      if (member.rank.priority === 1) return;
+      select(!isSelected);
+    },
+
+    async leaveRoster() {
+      try {
+        await this.$axios.delete(`/rosters/${this.rosterInfo.id}/leave`);
+      } catch (err) {
+        console.log(err);
+      }
+    },
+
     async getAnalytics() {
       try {
         const data = this.$axios.get(
@@ -628,48 +702,56 @@ export default {
     },
 
     updateMemberThroughForm({ formID, member }) {
-      console.log('member', member);
+      if (!member?.id) return;
 
-      if (member?.id) {
-        if (this.currentMember.id === member.id) {
-          this.formID = formID;
-        }
-        const match = this.members[this.currentTab].items.find(
-          (m) => m.id === member.id
-        );
+      // if (this.currentMember.id === member.id) {
+      //   this.formID = formID;
+      // }
+      let match = this.members[this.currentTab].items.find(
+        (m) => m.id === member.id
+      );
 
-        if (match) {
-          Object.assign(match, member);
-        }
+      if (match) {
+        match = Object.assign(match, member);
       }
     },
 
     updateCurrentMember(rank) {
-      if (rank) {
-        if (this.currentMember.rank.id === rank.id) {
-          if (this.currentMember.rank.name !== rank.name) {
-            this.currentMember.rank.name = rank.name;
-          }
-          this.permissions = Object.assign(this.permissions, rank.permissions);
+      if (!rank) return;
+      if (this.currentMember.rank.id === rank.id) {
+        if (this.currentMember.rank.name !== rank.name) {
+          this.currentMember.rank.name = rank.name;
         }
+        this.permissions = Object.assign(this.permissions, rank.permissions);
       }
     },
 
     setMemberData(arr) {
-      return arr.map((item) => {
-        const fields = item?.form?.fields?.length
-          ? item.form.fields.reduce((obj, field) => {
-              obj[snakeCase(field.alias)] = field.answer.value;
-              return obj;
-            }, {})
-          : {};
-        return Object.assign(item, fields);
+      return arr.map((member) => {
+        const defaults = { form: null };
+
+        if (member.forms.length) {
+          const form = member.forms.find(
+            ({ form_id }) => form_id === this.formID
+          );
+
+          if (form) {
+            return Object.assign(member, {
+              form: {
+                id: form.id,
+                form_id: form.form_id,
+              },
+            });
+          }
+        }
+
+        return Object.assign(member, defaults);
       });
     },
 
     setPageInfo(items) {
       if (items && items.results.length) {
-        this.computedMembers = this.setMemberData(items.results);
+        this.computedMembers = items.results;
 
         if (items?.pageInfo?.hasMore) {
           this.hasMore = items.pageInfo.hasMore;
@@ -705,6 +787,10 @@ export default {
         : false;
     },
 
+    canSelect() {
+      return !this.rosterInfo.link_to_discord && this.hasPermissionsForActions;
+    },
+
     hasPermissionsForRanks() {
       return this.permissions
         ? this.permissions.can_add_ranks ||
@@ -712,9 +798,11 @@ export default {
             this.permissions.can_remove_ranks
         : false;
     },
+
     currentTab() {
       return this.tabNames[this.tab];
     },
+
     isPrivate() {
       return (
         this.$auth.loggedIn &&
@@ -756,13 +844,31 @@ export default {
         },
       ];
     },
+
+    hasAdditionalColumns() {
+      return (
+        this.rosterInfo.show_fields_as_columns &&
+        this.rosterInfo.roster_form &&
+        this.rosterInfo.roster_form.fields &&
+        this.rosterInfo.roster_form.fields.length
+      );
+    },
+
+    additionalHeaders() {
+      return this.hasAdditionalColumns
+        ? this.rosterInfo.roster_form.fields.map(({ alias }) =>
+            snakeCase(alias)
+          )
+        : [];
+    },
     computedHeaders() {
-      if (this.rosterInfo.show_fields_as_columns) {
-        return Object.entries(this.headers).reduce((obj, [key, header]) => {
+      if (this.hasAdditionalColumns) {
+        const headers = cloneDeep(this.headers);
+        return Object.entries(headers).reduce((obj, [key, header]) => {
           obj[key] = header.splice(
             1,
             0,
-            ...this.additionalColumns.map((column) => ({
+            ...this.additionalHeaders.map((column) => ({
               text: column.toUpperCase().replace('_', ' '),
               sortable: false,
               value: snakeCase(column),
@@ -797,10 +903,26 @@ export default {
     computedMembers: {
       get() {
         return this.members[this.currentTab].items.map((member) => {
-          member.form = { id: member.form.id };
-          member.rank = this.$store.getters[RANKS.getters.ITEMS].find(
-            (rank) => rank.id === member.rank.id
-          );
+          // if (member.forms.length) {
+          //   const form = member.forms.find(
+          //     ({ form_id }) => form_id === this.formID
+          //   );
+
+          //   if (form) {
+          //     member.form = {
+          //       id: form.id,
+          //       form_id: form.form_id,
+          //     };
+          //   }
+          // }
+
+          if (member.rank) {
+            member.rank = {
+              ...this.$store.getters[RANKS.getters.ITEMS].find(
+                (rank) => rank.id === member.rank.id
+              ),
+            };
+          }
 
           return member;
         });
@@ -846,7 +968,13 @@ export default {
         return this.members[this.currentTab].selected;
       },
       set(value) {
-        this.members[this.currentTab].selected = value;
+        const selected = value.slice(0, 50);
+
+        if (selected.length > this.maxSelected) return;
+        this.members[this.currentTab].selected = selected;
+        /** filter out all the owners */
+        // if (!this.isMemberTab) return (membersSelected = selected);
+        // membersSelected = selected.filter((s) => s.rank.priority !== 1);
       },
     },
     exclude: {
